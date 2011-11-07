@@ -1,0 +1,6 @@
+#!/bin/bash
+
+#This script removes the current mlflex.jar file and downloads the latest one. This script only works on UNIX-like systems with the wget tool installed.
+rm ../mlflex.jar
+wget http://sourceforge.net/projects/mlflex/files/jar/mlflex.jar/download
+mv mlflex.jar ../

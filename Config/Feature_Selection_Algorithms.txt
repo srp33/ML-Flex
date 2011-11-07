@@ -1,0 +1,25 @@
+# This file contains a line for each feature-selection algorithm that can be used within ML-Flex. See the README file for instructions on how to configure this file.
+#
+##############################################
+# These algorithms are from the Weka library
+##############################################
+weka_info_gain;mlflex.learners.WekaLearner;/usr/bin/java;weka.attributeSelection.InfoGainAttributeEval;-s;weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1
+weka_svm_weights;mlflex.learners.WekaLearner;/usr/bin/java;weka.attributeSelection.SVMAttributeEval;-X;1;-Y;10;-Z;10;-P;1.0E-25;-T;1.0E-10;-C;1.0;-N;0;-s;weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1
+weka_relieff;mlflex.learners.WekaLearner;/usr/bin/java;weka.attributeSelection.ReliefFAttributeEval;-M;-1;-D;1;-K;10;-s;weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1
+##############################################
+# These algorithms are from the Orange library
+##############################################
+orange_relieff;mlflex.learners.OrangeLearner;/usr/bin/python;orngFSS.attMeasure(examples, orange.MeasureAttribute_relief(m=50))
+# The following algorithm can only be used on discrete variables
+orange_relevance;mlflex.learners.OrangeLearner;/usr/bin/python;orngFSS.attMeasure(examples, orange.MeasureAttribute_relevance)
+# The following algorithm can only be used on continuous variables
+orange_info_gain;mlflex.learners.OrangeLearner;/usr/bin/python;orngFSS.attMeasure(examples, orange.MeasureAttribute_info)
+##############################################
+# This algorithm is for random selection
+##############################################
+random;mlflex.learners.RandomMachineLearner
+##############################################
+# These algorithms are for demo purposes
+##############################################
+demo_arff_ranker;mlflex.learners.GenericArffLearner;/usr/bin/python;Internals/Python/DemoArffFeatureRanker.py;{INPUT_FILE};1;{OUTPUT_FILE}
+demo_delimited_ranker;mlflex.learners.GenericDelimitedLearner;/usr/bin/python;Internals/Python/DemoDelimitedFeatureRanker.py;{INPUT_FILE};1;{OUTPUT_FILE}

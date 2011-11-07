@@ -1,0 +1,19 @@
+mkdir -p C50
+cp C50.tgz C50/
+cd C50/
+tar zxvf C50.tgz
+make
+cp c5.0 ..
+cd ..
+rm -rf C50
+
+mkdir -p see5
+cp see5-public.tgz see5/
+#The following file is slightly tweaked, so copying it separately
+cd see5/
+tar zxvf see5-public.tgz
+cp ../sample.c .
+gcc sample.c -lm -o sample
+cp sample ..
+cd ..
+rm -rf see5

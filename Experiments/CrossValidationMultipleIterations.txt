@@ -1,0 +1,5 @@
+# This experiment demonstrates how cross-validation can be repeated multiple times (data instances are assigned using a different random seed in each iteration). In this example, 2 folds are specified and the analysis is repeated 10 times.
+DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
+CLASSIFICATION_ALGORITHMS=weka_naive_bayes
+NUM_OUTER_CROSS_VALIDATION_FOLDS=2
+NUM_ITERATIONS=10

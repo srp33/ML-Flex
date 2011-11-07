@@ -1,0 +1,5 @@
+# This experiment demonstrates how to perform cross-validation where feature selection is performed within each training set. At least one feature-selection algorithm must be specified. It's also important to specify at least one option for NUM_FEATURES_OPTIONS (see the README files for a deeper explanation).
+DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
+CLASSIFICATION_ALGORITHMS=weka_naive_bayes
+FEATURE_SELECTION_ALGORITHMS=weka_relieff
+NUM_FEATURES_OPTIONS=1;2;3;4

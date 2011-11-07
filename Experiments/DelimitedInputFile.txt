@@ -1,0 +1,4 @@
+# This experiment uses data from the Soybean experiment in the UCI Machine Learning repository and demonstrates how to import data into ML-Flex from a tab-delimited file.
+DATA_PROCESSORS=mlflex.dataprocessors.DelimitedDataProcessor("InputData/UCI/soybean-large.all.data.tab")
+CLASSIFICATION_ALGORITHMS=weka_naive_bayes
+DEPENDENT_VARIABLE_NAME=SoybeanClass

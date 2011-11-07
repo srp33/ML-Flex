@@ -1,0 +1,8 @@
+This directory contains any Python scripts that are used by ML-Flex directly or that are used for post-processing data produced by ML-Flex.
+
+OrangeExec.py is designed to act as an interface between ML-Flex and the Orange machine learning framework (http://orange.biolab.si/). To enable ML-Flex to interface with Orange, it is necessary to install Python (http://python.org/) and Orange (http://orange.biolab.si/nightly_builds.html) and to ensure that Python can access the Orange libraries. One way of doing this is to modify the PYTHONPATH environment variable. For example, the following two statements can be added to the ~/.profile file (on the MAC OS X operating system) or ~/.bash_profile (on many UNIX systems) to point to Orange.
+
+  PYTHONPATH=/Applications/Orange.app/Contents/Resources/orange
+  export PYTHONPATH
+
+To test whether Python can access the Orange libraries, open the Python interpreter (typically by entering "python" at the command line) and enter "import orange". If it is configured properly, no error message will be displayed.

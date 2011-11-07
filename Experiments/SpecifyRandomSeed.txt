@@ -1,0 +1,4 @@
+# This experiment demonstrates to set a random seed explicitly. This may be desirable if you want an experiment to provide the exact same result each time but don't want to use the default random seed.
+DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
+CLASSIFICATION_ALGORITHMS=weka_naive_bayes
+RANDOM_SEED=99

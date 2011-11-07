@@ -1,0 +1,19 @@
+The ML-Flex source code is included in the Internals/Java directory. Each Java source file contains a header stating the licensing terms (GPLv3) and a description of the class.
+
+Users may be interested in modifying the source code for two reasons: 1) they want to extend (inherit from) an existing Java class or 2) they want to modify the core functionality of ML-Flex to suit their own purposes.
+
+ML-Flex contains various "abstract" Java classes that are designed to support generic implementations and be extended for custom purposes. For example, mlflex.dataprocessors.AbstractDataProcessor contains logic to parse raw data, store it in the ML-Flex standard format, describe the data, etc. Users can harness the full power of Java to handle any file format and to support custom data transformations by creating their own classes that extend this class. For example, mlflex.dataprocessors.DelimitedDataProcessor customizes it by parsing delimited data files. And mlflex.dataprocessors.tcga.TcgaClinicalDataProcessor extends it with logic to parse files in a custom clinical-data format.
+
+The list below indicates the abstract classes in ML-Flex. The source files for these classes contain extensive code documentation to help users understand the purpose of each class and how to extend it. See also "Creating a New Data Processor."
+
+  * mlflex.dataprocessors.AbstractDataProcessor
+  * mlflex.dataprocessors.AbstractMetadataProcessor
+  * mlflex.learners.AbstractMachineLearner
+  * mlflex.ensemblelearners.AbstractEnsembleLearner
+  * mlflex.summarization.AbstractSummarizer
+  * mlflex.transformation.AbstractTransformer
+  * mlflex.transformation.AbstractDependentVariableTransformer
+
+Because the full source code is provided with the ML-Flex distribution, users can also modify the core functionality of ML-Flex to suit their own purposes. If such changes are made, please consult with the ML-Flex developers to discuss inclusion of such changes into the main development branch.
+
+A precompiled JAR file comes with the ML-Flex distribution. If the source code is changed, the "build" script can be run. This script will recompile the source code and produce an update version of mlflex.jar. It will also rebuild the Java documentation.

@@ -1,0 +1,3 @@
+This folder (and its subfolders) contain the Java source code for the ML-Flex software. ML-Flex was developed primarily using the IntelliJ (http://www.jetbrains.com/idea/) integrated development environment, and IntelliJ project files are included to enable other developers to do the same.
+
+The individual Java files contain headers describing their purpose. In particular, the classes prefixed with "Abstract" can be extended with novel functionality to work easily within the ML-Flex framework.

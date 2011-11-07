@@ -1,0 +1,13 @@
+<project default="jar">
+  <target name="jar">
+    <jar destfile="mlflex.jar"
+        basedir="src"
+        includes="**/*.class">
+      <manifest>
+        <attribute name="Main-Class" value="mlflex.Main" />
+        <attribute name="Class-Path" value=". lib/commons-math-1.2.jar lib/weka.jar lib/libsvm.jar lib/slf4j-api-1.6.1.jar lib/logback-core-0.9.29.jar lib/logback-classic-0.9.29.jar" />
+      </manifest>
+    </jar>
+  </target>
+</project>
+

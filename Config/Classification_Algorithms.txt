@@ -1,0 +1,42 @@
+# This file contains a line for each classification algorithm that can be used within ML-Flex. See the README file for instructions on how to configure this file.
+#
+##############################################
+# These are all Weka algorithms
+##############################################
+weka_one_r;mlflex.learners.WekaLearner;/usr/bin/java;weka.classifiers.rules.OneR;-B;6
+weka_svm_linear;mlflex.learners.WekaLearner;/usr/bin/java;weka.classifiers.functions.LibSVM;-S;0;-K;0;-D;3;-G;0.0;-R;0.0;-N;0.5;-M;40.0;-C;1.0;-E;0.0010;-P;0.1;-B
+weka_svm_poly;mlflex.learners.WekaLearner;/usr/bin/java;weka.classifiers.functions.LibSVM;-S;0;-K;1;-D;3;-G;0.0;-R;0.0;-N;0.5;-M;40.0;-C;1.0;-E;0.0010;-P;0.1;-B
+weka_svm_rbf;mlflex.learners.WekaLearner;/usr/bin/java;weka.classifiers.functions.LibSVM;-S;0;-K;2;-D;3;-G;0.0;-R;0.0;-N;0.5;-M;40.0;-C;1.0;-E;0.0010;-P;0.1;-B
+weka_naive_bayes;mlflex.learners.WekaLearner;/usr/bin/java;weka.classifiers.bayes.NaiveBayes;-K
+weka_conjunctive_rule;mlflex.learners.WekaLearner;/usr/bin/java;weka.classifiers.rules.ConjunctiveRule;-N;3;-M;2.0;-P;-1;-S;1
+weka_decision_tree;mlflex.learners.WekaLearner;/usr/bin/java;weka.classifiers.trees.J48;-C;0.25;-M;2
+weka_knn;mlflex.learners.WekaLearner;/usr/bin/java;weka.classifiers.lazy.IB1
+##############################################
+# This is Quinlan's C.0 Decision Trees learner
+##############################################
+c50;mlflex.learners.C5Learner;Internals/CLibraries/c5.0;Internals/CLibraries/sample
+##############################################
+# These learners are from the Orange library
+##############################################
+orange_naive_bayes;mlflex.learners.OrangeLearner;/usr/bin/python;orngBayes.BayesLearner()
+orange_decision_tree;mlflex.learners.OrangeLearner;/usr/bin/python;orngTree.TreeLearner()
+orange_random_forest;mlflex.learners.OrangeLearner;/usr/bin/python;orngEnsemble.RandomForestLearner()
+orange_svm_linear;mlflex.learners.OrangeLearner;/usr/bin/python;orngSVM.SVMLearner(kernel_type=orange.SVMLearner.Linear, svm_type=orange.SVMLearner.C_SVC)
+orange_svm_poly;mlflex.learners.OrangeLearner;/usr/bin/python;orngSVM.SVMLearnerEasy(kernel_type=orange.SVMLearner.RBF, svm_type=orange.SVMLearner.C_SVC)
+orange_svm_rbf;mlflex.learners.OrangeLearner;/usr/bin/python;orngSVM.SVMLearnerEasy(kernel_type=orange.SVMLearner.Polynomial, svm_type=orange.SVMLearner.C_SVC)
+###################################################
+# These learners are from the R statistical package
+# They are equipped only to handle continuous variables and/or discrete variables with two options. An error will be thrown if a discrete variable with 3+ options is used.
+###################################################
+r_svm_rbf;mlflex.learners.RLearner;/usr/bin/Rscript;svm_radial
+r_svm_linear;mlflex.learners.RLearner;/usr/bin/Rscript;svm_linear
+r_svm_poly;mlflex.learners.RLearner;/usr/bin/Rscript;svm_polynomial
+##############################################
+# This algorithm is for random classification
+##############################################
+random;mlflex.learners.RandomMachineLearner
+##############################################
+# These algorithms are for demo purposes
+##############################################
+demo_arff_classifier;mlflex.learners.GenericArffLearner;/usr/bin/python;Internals/Python/DemoArffClassifier.py;{INPUT_TRAINING_FILE};{INPUT_TEST_FILE};1;{OUTPUT_FILE}
+demo_delimited_classifier;mlflex.learners.GenericDelimitedLearner;/usr/bin/python;Internals/Python/DemoDelimitedClassifier.py;{INPUT_TRAINING_FILE};{INPUT_TEST_FILE};1;{OUTPUT_FILE}

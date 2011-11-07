@@ -1,0 +1,4 @@
+# This experiment demonstrates how leave-one-out cross-validation can be performed. Specifying zero for the number of folds means that leave-one-out cross validation will be used. Alternatively, you can specify the same number of folds as data instances.
+DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
+CLASSIFICATION_ALGORITHMS=weka_naive_bayes
+NUM_OUTER_CROSS_VALIDATION_FOLDS=0

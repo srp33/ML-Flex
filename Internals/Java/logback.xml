@@ -1,0 +1,21 @@
+<configuration scan="true" scanPeriod="60 seconds">
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%date{ISO8601} | %-5level | %thread | %msg %n</pattern>
+    </encoder>
+  </appender>
+
+  <appender name="LOG_FILE" class="ch.qos.logback.core.FileAppender">
+    <file>Log.txt</file>
+    <append>true</append>
+    <prudent>true</prudent>
+    <encoder>
+      <pattern>%date{ISO8601} | %-5level | %thread | %msg %n</pattern>
+    </encoder>
+  </appender>
+        
+  <root level="INFO">
+    <appender-ref ref="STDOUT" />
+    <appender-ref ref="LOG_FILE" />
+  </root>
+</configuration>

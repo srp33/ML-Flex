@@ -1,0 +1,5 @@
+# This experiment demonstrates how you would set up an experiment to invoke the "Demo" learners. These learners, which are explained in the tutorials, are designed to illustrate how you can integrate with third-party machine-learning software.
+DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
+CLASSIFICATION_ALGORITHMS=demo_arff_classifier;demo_delimited_classifier
+FEATURE_SELECTION_ALGORITHMS=demo_arff_ranker;demo_delimited_ranker
+NUM_FEATURES_OPTIONS=1;2;3;4

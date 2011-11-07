@@ -1,0 +1,82 @@
+Within ML-Flex, one of the key concepts is that of a "data processor." At a technical level, a data processor is a Java class within ML-Flex that parses input files, transforms the data, and describes the data. Various data processor classes are contained within ML-Flex by default, and the user can create his/her own data processors. This file describes the steps for creating a custom data processor.
+
+To create a custom data processor, it will be necessary to modify the ML-Flex source code. Please review "Modifying Java Source Code" for instructions on how to access the source code and recompile ML-Flex after it has been modified.
+
+Below is a simple example that illustrates how to create a simple data processor. Comments are dispersed throughout the code to explain what is occurring at each line in the code. This file is also contained within the main ML-Flex source code, so it may be easier to view the code in an editor like IntelliJ (http://www.jetbrains.com/idea/).
+
+==================================================
+==================================================
+
+// This line is required by Java to specify which package contains the code
+package mlflex.dataprocessors;
+
+// These import statements allow us to use other Java classes besides this one
+import mlflex.core.DataInstanceCollection;
+import mlflex.core.DataValues;
+import mlflex.helper.MathUtilities;
+import java.util.Random;
+
+/** This class represents a trivial example of how to create a data processor. */
+public class ExampleDataProcessor extends AbstractDataProcessor
+{
+    /** This method is used to parse/generate raw data that will be input into ML-Flex. In this example, random values for three data points and ten data instances are generated. The random values are continuous values. */
+    @Override
+    protected void ParseInputData() throws Exception
+    {
+        // Specify the names of the data points that will be used
+        String[] dataPoints = new String[] {"DataPoint1", "DataPoint2", "DataPoint3"};
+
+        // Specify the IDs of the data instances that will be used
+        String[] instanceIDs = new String[] {"Instance1", "Instance2", "Instance3", "Instance4", "Instance5", "Instance6", "Instance7", "Instance8", "Instance9", "Instance10"};
+
+        // Loop through the data points
+        for (String dataPoint : dataPoints)
+            // Loop through the instances
+            for (String instanceID : instanceIDs)
+                // Save a raw data point using the combination of data point and instance ID
+                SaveRawDataPoint(dataPoint, instanceID, String.valueOf(new Random().nextDouble()));
+    }
+
+    /** After the raw data are processed and stored, various transformations can be applied to the data before it is used for machine-learning analyses. Implementing this method is one way to perform such transformations. In this example, the values are transformed to the log-2 scale. */
+    @Override
+    protected DataInstanceCollection TransformInstances(DataInstanceCollection rawInstances) throws Exception
+    {
+        // Loop through the data instances
+        for (DataValues instance : rawInstances)
+            // Loop through the data points for each instance
+            for (String dataPoint : instance.GetDataPointNames())
+            {
+                // Retrieve the raw value
+                String rawValue = instance.GetDataPointValue(dataPoint);
+
+                // Convert the raw value to a numeric value
+                double numericValue = Double.valueOf(rawValue);
+
+                // Perform a log-2 transformation
+                double transformedValue = MathUtilities.Log2(numericValue);
+
+                // Update the values in the collection
+                instance.UpdateDataPoint(dataPoint, String.valueOf(transformedValue));
+            }
+
+        // Return the collection of data in transformed form
+        return rawInstances;
+    }
+}
+
+
+==================================================
+=================== Notes ========================
+==================================================
+
+  * One could use the above data processor in an ML-Flex experiment by specifying the following line their experiment file:
+
+    DATA_PROCESSORS=mlflex.dataprocessors.ExampleDataProcessor
+
+  * New data processors should be added under the Internals/Java/dataprocessors directory. Then ML-Flex must be recompiled before you can specify it in an experiment file (see "Modifying Java Source Code").
+
+  * ML-Flex contains multiple data processors that parse data from text files. If you need to create a data processor to parse another file format, you should be able to pattern your data processor after these.
+
+  * If you have an idea for a new data processor but lack Java programming skills, please notify the mailing list to see if someone is willing to help.
+
+  * If you have created a data processor that you believe has relevance to other ML-Flex users, please notify the mailing list.

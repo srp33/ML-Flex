@@ -1,0 +1,27 @@
+ML-Flex experiments are executed via a command-line interface. Users specify various parameters at the command line to suit the needs of a specific experiment. The "Command Line Parameters" tutorial provides details about the various parameters that can be specified.
+
+One important command-line parameter is a path to an "experiment file" that details the configuration settings for an experiment. The Experiments directory contains various example experiment files. Users can create their own experiment files, specifying the algorithms, data sets, etc. that will be used. The "Creating an Experiment File" tutorial contains a tutorial on creating experiment files.
+
+Within the main ML-Flex directory is a script file called "run." This file demonstrates how to run a basic ML-Flex experiment at the command line. This script was developed on Mac OS X but should work on any UNIX-like environment. The syntax will be slightly different on Windows systems. (Please send an email to the support mailing list for help, if needed.)
+
+==================================================
+============== If an error occurs ================
+==================================================
+
+If an error occurs as ML-Flex executes, an error message will be logged and printed to the console.
+
+In some cases, an error is due to settings specified by the user. In such cases, the error message should provide a clue on how to address it.
+
+In other cases, an error may result from a system error on the computer executing ML-Flex. Generally speaking, ML-Flex should be able to recover from such errors. If you suspect this may be happening, allow ML-Flex to continue running for a few minutes and see if the error resolves itself. If not, it may be a software bug. Please report any bugs to the mailing list.
+
+When executing Java programs at the command line, it is common to get an "OutOfMemoryException" error. By default, Java allocates a minimal amount of memory. If this limit is exceeded, Java will stop executing and indicate it has run out of memory. However, it is possible to prevent this error by telling Java that you want to allocate more than the default minimum memory. This can be done with the -Xmx parameter. The "run" script specifies a limit of 1 gigabyte of memory (-Xmx1g), but this can be changed according to the user's preferences and the amount of memory available on the system being used.
+
+==================================================
+=================== Output =======================
+==================================================
+
+As ML-Flex executes, it generates a variety of output files that describe the results of the experiment. These files are stored in the Output directory and contain information about classification performance, instance-level predictions, algorithm output, etc. Also stored within the Output directory is a file named Report.html, which contains a summary of the results and links to each item within Output. This report can be viewed in a Web browser.
+
+ML-Flex calculates a wide variety of performance metrics to quantify how well the algorithms predicted the dependent variable. Some of these metrics are relatively simple--for example, total number of correct predictions, accuracy, error rate. Some metrics are more complex--for example, weighted area under the receiving operator characteristic curve (AUC), class complexity, etc. Various class-level metrics--for example, total number predicted correctly for a particular class--are also included. Many of the metrics are calculated by interfacing with the Weka data mining software (http://www.cs.waikato.ac.nz/ml/weka/).
+
+Each output file contains a description at the top.

@@ -1,0 +1,2 @@
+# This experiment demonstrates how do an export-only experiment. Because no classification algorithm is specified, no classification will be performed. Rather the input data will be parsed by ML-Flex and exported to various file formats.
+DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")

@@ -1,0 +1,23 @@
+This folder contains general configuration files that are used in this application across all experiments.
+
+==================================================
+==== Feature_Selection_Algorithms.txt =====
+==================================================
+
+This file contains information necessary to configure execution of feature selection/ranking algorithms that can be used by ML-Flex. Each line in this file contains parameters for a single algorithm. Pieces of information are separated by semicolons. The first value (e.g., weka_info_gain) indicates the name that you want to use to describe the algorithm. This same name is used in the experiment files to indicate that you want to apply the algorithm. The second value (e.g., mlflex.WekaLearner) indicates the Java class (within ML-Flex) that implements (or interfaces to) the algorithm; this Java class should inherit from the mlflex.AbstractMachineLearner class. The remaining configuration values are parameters that will be passed to the Java class that implements (or interfaces to) the algorithm. These values will vary depending on what each learner requires.
+
+==================================================
+===== Classification_Algorithms.txt ======
+==================================================
+
+This file contains information necessary to configure execution of the classification algorithms that can be used by ML-Flex. Each line in this file contains parameters for a single classification algorithm. Pieces of information are separated by semicolons. The first value (e.g., weka_svm_linear) indicates the name that you want to use to describe the classification algorithm. This same name is used in the experiment files to indicate that you want to apply the classification algorithm. The second value (e.g., mlflex.WekaLearner) indicates the Java class that implements (or interfaces to) the classification algorithm; this Java class should inherit from the mlflex.AbstractMachineLearner class. The remaining configuration values are parameters that will be passed to the Java class that implements (or interfaces to) the classification algorithm. These values will vary depending on what each learner requires.
+
+==================================================
+===================== Notes ======================
+==================================================
+
+Out of the box, ML-Flex supports mlflex.WekaLearner, which interfaces to the Weka machine-learning package (http://www.cs.waikato.ac.nz/ml/weka/). If configured, ML-Flex should be able interface with any algorithm in Weka. Additionally, ML-Flex contains mlflex.OrangeLearner that interfaces with the Orange machine-learning framework (http://orange.biolab.si/), mlflex.C5Learner that interfaces with the C5.0 Decision Trees software (http://www.rulequest.com/see5-info.html), and mlflex.RLearner that interfaces with the R statistical software (http://www.r-project.org). However, the Orange, C5.0, and R software are not packaged with ML-Flex by default and need to be installed and configured alongside ML-Flex if they are to be used. Paths to these libraries also need to be specified in Classification_Algorithms.txt and/or Feature_Selection_Algorithms.txt. Example files demonstrate how this can be done.
+
+The current implementation of mlflex.RLearner interacts with the Internals/R/Predict.R script. This script currently is designed to interface with the e1071 package (http://cran.r-project.org/web/packages/e1071/index.html). This package must also be installed from within R before running an ML-Flex analysis that invokes this script. Also, please note that Internals/R/Predict.R can be modified to support other R machine-learning packages and/or custom implementations in R.
+
+This folder contains files that demonstrate how ML-Flex can be configured to perform several demo experiments. The settings specified here are for demonstration purposes and may not represent what each user will want to use for his/her experiments.

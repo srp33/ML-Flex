@@ -1,0 +1,7 @@
+# This experiment is used for validation to test a scenario where perfect accuracy is expected. This helps verify that ML-Flex is behaving the way it should. In this example, all algorithms that support discrete data points are tested.
+DATA_PROCESSORS=mlflex.dataprocessors.DelimitedDataProcessor("InputData/DelimitedDiscrete.txt")
+CLASSIFICATION_ALGORITHMS=weka_one_r;weka_svm_linear;weka_svm_poly;weka_svm_rbf;weka_naive_bayes;weka_conjunctive_rule;weka_decision_tree;weka_knn;c50;orange_naive_bayes;orange_decision_tree;orange_random_forest;orange_svm_linear;orange_svm_poly;orange_svm_rbf;r_svm_rbf;r_svm_linear;r_svm_poly
+FEATURE_SELECTION_ALGORITHMS=weka_info_gain;weka_svm_weights;weka_relieff;orange_relieff;orange_relevance;orange_info_gain
+NUM_FEATURES_OPTIONS=1;3
+NUM_OUTER_CROSS_VALIDATION_FOLDS=2
+NUM_INNER_CROSS_VALIDATION_FOLDS=2

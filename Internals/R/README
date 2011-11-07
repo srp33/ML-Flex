@@ -1,0 +1,3 @@
+This folder contains any R (http://www.r-project.org) scripts that are used by ML-Flex.
+
+R contains various machine-learning algorithms that could be used by ML-Flex. The Predict.R script is provided as a means to interface between ML-Flex and such algorithms. Currenly this script only interfaces with SVM algorithms within the e1071 package, but it could be extended fairly easily to interface with any R package.

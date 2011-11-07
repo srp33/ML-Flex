@@ -1,0 +1,4 @@
+# This experiment demonstrates how to randomly exclude data instances from each training set. This approach can be used to test the effect of outliers on performance.
+DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
+CLASSIFICATION_ALGORITHMS=weka_naive_bayes
+NUM_TRAINING_INSTANCES_TO_EXCLUDE_RANDOMLY=2

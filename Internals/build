@@ -1,0 +1,46 @@
+#!/bin/bash
+
+buildDir=builddir
+
+rm -rf $buildDir
+mkdir -p $buildDir/lib
+
+cd Java
+find . -depth -type f -name '*.java' | cpio --pass-through --preserve-modification-time --make-directories --quiet ../$buildDir/src/mlflex
+cd ..
+
+cp lib/*.jar $buildDir/lib
+cp build.xml $buildDir
+
+cd $buildDir
+
+find src -name *.java > sources_list.txt
+javac -Djava.ext.dirs=lib @sources_list.txt
+
+if [ "$1" != "NO" ]
+then
+  mkdir docs
+  javadoc -protected -splitindex -author -version -nodeprecated -extdirs lib -d docs @sources_list.txt -sourcepath src
+fi
+
+rm sources_list.txt
+
+ant
+
+rm build.xml
+
+echo `date +%m-%d-%Y-%H-%M` > Version.txt
+
+cp mlflex.jar ../../
+cp Version.txt ../../
+
+if [ "$1" != "NO" ]
+then
+  cp -r docs ../Java/
+fi
+
+cp -r lib ../../
+
+cd ..
+rm -rf $buildDir
+rm -rf src

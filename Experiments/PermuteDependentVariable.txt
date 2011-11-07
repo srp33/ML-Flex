@@ -1,0 +1,4 @@
+# This experiment demonstrates how to execute a permutation experiment. The dependent variable (class) values are randomly shuffled. This can be useful for creating null distributions, etc.
+DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
+CLASSIFICATION_ALGORITHMS=weka_naive_bayes
+PERMUTE_DEPENDENT_VARIABLE_VALUES=true
