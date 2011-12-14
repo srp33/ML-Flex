@@ -135,9 +135,9 @@ public abstract class AbstractEnsembleLearner
         return getClass().getSimpleName();
     }
 
-    /** Creates a description of this object.
+    /** Creates a formatted description of this object.
      *
-     * @return
+     * @return A formatted description of this object
      */
     public String GetFormattedDescription()
     {

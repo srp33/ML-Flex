@@ -64,7 +64,7 @@ public class LockedCallable implements Callable<Object>
     /** This is a convenience method that accepts an array of LockedCallable objects and converts it into a list.
      *
      * @param callables Array of callable arguments
-     * @return
+     * @return A List of callable objects
      */
     public static ArrayList<LockedCallable> CreateLockedCallableList(LockedCallable... callables)
     {
