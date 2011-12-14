@@ -30,7 +30,7 @@ public class DataValues implements Iterable<String>, Comparable
 {
     private String _id;
     private HashMap<String, String> _dataPoints = new HashMap<String, String>();
-    private static String COMMA_REPLACE_STRING;
+    private static String COMMA_REPLACE_STRING = "_comma_";
 
     /** Constructor.
      *
@@ -354,10 +354,7 @@ public class DataValues implements Iterable<String>, Comparable
         output.append(GetID() + ":");
 
         for (String dataPointName : GetDataPointNames())
-        {
-            COMMA_REPLACE_STRING = "_comma_";
             output.append(dataPointName + "=" + GetDataPointValue(dataPointName).replace(",", COMMA_REPLACE_STRING) + ",");
-        }
 
         String str = output.toString();
         str = str.substring(0, str.length()-1);
