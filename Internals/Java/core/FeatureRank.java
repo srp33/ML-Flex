@@ -32,7 +32,7 @@ public class FeatureRank implements Comparable
      * @param feature Feature/variable name
      * @param rank Rank
      */
-    FeatureRank(String feature, double rank)
+    public FeatureRank(String feature, double rank)
     {
         Feature = feature;
         Rank = rank;
