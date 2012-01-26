@@ -1,4 +1,5 @@
 # This experiment demonstrates how a simple train/test experiment can be performed. Specifying the number of folds as "1" indicates that train/test validation will be used.
 DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
-CLASSIFICATION_ALGORITHMS=weka_naive_bayes
+CLASSIFICATION_ALGORITHMS=weka_bagging
+#CLASSIFICATION_ALGORITHMS=weka_naive_bayes
 NUM_OUTER_CROSS_VALIDATION_FOLDS=1

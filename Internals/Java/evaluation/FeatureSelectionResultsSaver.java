@@ -102,34 +102,6 @@ public class FeatureSelectionResultsSaver
         Singletons.Log.Debug("Save the output to a file");
         FileUtilities.CreateFileDirectoryIfNotExists(GetOutFilePath(true));
         ResultsFileUtilities.AppendMatrixColumn(nameValuePairs, GetOutFilePath(true), headerComment);
-
-//        String outFilePath = GetOutFilePath(true);
-//
-//        FeatureRanks ranks = new FeatureRanks();
-//
-//        for (int outerFold : Singletons.InstanceVault.GetCrossValidationAssignments().GetFoldsWithTestData(_processor))
-//        {
-//            Singletons.Log.Debug("Getting ranked features for outer fold " + outerFold);
-//            ArrayList<String> rankedFeatures = new FeatureSelectionEvaluator(_processor, _algorithm, outerFold).GetOuterSelectedFeatures(-1);
-//            Singletons.Log.Debug("Done getting ranked features for outer fold " + outerFold);
-//
-//            if (rankedFeatures.size() == 0)
-//                throw new Exception("An error occurred when trying to save mean feature ranks file for outer fold " + outerFold + ", feature selection algorithm " + _algorithm.Description + " and " + _processor.GetDescription() + ". No features were selected.");
-//
-//            Singletons.Log.Debug("Combining ranked features for outer fold " + outerFold);
-//            ranks.Add(rankedFeatures);
-//        }
-//
-//        FileUtilities.CreateFileDirectoryIfNotExists(outFilePath);
-//
-//        String headerComment = " Order in which each feature was ranked by the feature-selection algorithm. When cross-validation was used, the values represent average ranks across the folds. Note that these values are calculated on the assumption that all features received a rank, whereas some feature-selection algorithms do not assign ranks to all.";
-//
-//        Singletons.Log.Debug("Getting mean ranks");
-//        ArrayList<NameValuePair> meanRanks = ranks.GetMeanRanks();
-//        meanRanks.add(0, new NameValuePair("Feature", "Rank"));
-//
-//        Singletons.Log.Debug("Save the output to a file");
-//        ResultsFileUtilities.AppendMatrixColumn(meanRanks, outFilePath, headerComment);
     }
 
 //    public void SaveMultipleIterationSummary() throws Exception

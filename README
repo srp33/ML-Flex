@@ -1,10 +1,12 @@
 ML-Flex web site: http://mlflex.sourceforge.net/
 
-ML-Flex downloads: https://sourceforge.net/projects/mlflex/files/
+Tutorial: http://mlflex.sourceforget.net/tutorial (read this to learn how to get started)
 
-ML-Flex support mailing list: https://lists.sourceforge.net/lists/listinfo/mlflex-support
+Download: https://sourceforge.net/projects/mlflex/files/
 
-ML-Flex code (GIT) repository:
+Support mailing list: https://lists.sourceforge.net/lists/listinfo/mlflex-support
+
+Code (GIT) repository:
 
   * https://github.com/srp33/ML-Flex
   * git@github.com:srp33/ML-Flex.git
@@ -16,8 +18,3 @@ Contributors:
 
 License:
   GNU General Public License v3.0 (http://www.gnu.org/licenses/gpl.html)
-
-==================================================
-==================================================
-
-The Tutorials directory contains various help files to explain how to execute ML-Flex experiments. Each of the main sub-directories within ML-Flex also contains a README file with details relevant to that directory. Please send any questions or comments to the support mailing list specified above.

@@ -18,6 +18,7 @@
 package mlflex.helper;
 
 import mlflex.core.Settings;
+import mlflex.core.Singletons;
 import mlflex.parallelization.LockedCallable;
 import mlflex.parallelization.MultiThreadedTaskHandler;
 
@@ -53,7 +54,14 @@ public class Vacuum
 
         MultiThreadedTaskHandler.ExecuteLockTasks("Post experiment cleanup", callables);
 
-        // Can't do this in a LockedCallable object obviously
-        MiscUtilities.DeleteCoreDirectory(Settings.LOCKS_DIR);
+        try
+        {
+            // Can't do this in a LockedCallable object
+            MiscUtilities.DeleteCoreDirectory(Settings.LOCKS_DIR);
+        }
+        catch (Exception ex)
+        {
+            Singletons.Log.Debug(ex);
+        }
     }
 }
