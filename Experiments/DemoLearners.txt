@@ -3,3 +3,4 @@ DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff
 CLASSIFICATION_ALGORITHMS=demo_arff_classifier;demo_delimited_classifier
 FEATURE_SELECTION_ALGORITHMS=demo_arff_ranker;demo_delimited_ranker
 NUM_FEATURES_OPTIONS=1;2;3;4
+NUM_ITERATIONS=1

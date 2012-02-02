@@ -306,7 +306,7 @@ public class ModelSelector
         ArrayList<String> descriptionItems = ListUtilities.CreateStringList(Processor.GetDescription(), ClassificationAlgorithm);
 
         if (FeatureSelectionEvaluator.NeedToSelectFeatures(Processor, FeatureSelectionAlgorithm))
-            descriptionItems.add(1, FeatureSelectionAlgorithm.Description);
+            descriptionItems.add(1, FeatureSelectionAlgorithm.Key);
 
         return ListUtilities.Join(descriptionItems, delimiter);
     }

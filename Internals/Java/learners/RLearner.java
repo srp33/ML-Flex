@@ -30,23 +30,21 @@ import java.util.HashSet;
 public class RLearner extends AbstractMachineLearner
 {
     @Override
-    public ArrayList<String> SelectOrRankFeatures(ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
+    public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         throw new Exception("Not implemented");
     }
 
     @Override
-    public ModelPredictions TrainTest(ArrayList<String> algorithmParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
     {
         CheckDataTypes(trainingData, testData);
 
         // Create training data file that will be used as input
-        AnalysisFileCreator trainingCreator = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "RTrain_" + MiscUtilities.GetUniqueID(), trainingData, testData, true);
-        trainingCreator.CreateTransposedTabDelimitedFile(false);
+        String trainingFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "RTrain_" + MiscUtilities.GetUniqueID(), trainingData, testData, true).CreateTransposedTabDelimitedFile(false).GetTransposedTabDelimitedFilePath();
 
         // Create test data file that will be used as input
-        AnalysisFileCreator testCreator = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "RTest_" + MiscUtilities.GetUniqueID(), testData, trainingData, false);
-        testCreator.CreateTransposedTabDelimitedFile(false);
+        String testFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "RTest_" + MiscUtilities.GetUniqueID(), testData, trainingData, false).CreateTransposedTabDelimitedFile(false).GetTransposedTabDelimitedFilePath();
 
         // Create output directory
         String outputDirectoryPath = Settings.TEMP_RESULTS_DIR + MiscUtilities.GetUniqueID() + "/";
@@ -56,19 +54,14 @@ public class RLearner extends AbstractMachineLearner
         String outputFileName = "Output_" + MiscUtilities.GetUniqueID() + ".txt";
 
         // Build a list of command arguments
-        ArrayList<String> commandArgs = new ArrayList<String>(algorithmParameters);
-        commandArgs.add(1, "--vanilla");
-        commandArgs.add(2, Settings.INTERNALS_DIR + "R/Predict.R");
-        commandArgs.add(trainingCreator.GetTransposedTabDelimitedFilePath());
-        commandArgs.add(testCreator.GetTransposedTabDelimitedFilePath());
-        commandArgs.add(outputDirectoryPath + outputFileName);
+        String command = commandTemplate.replace("{ALGORITHM}", algorithmParameters.get(0)).replace("{INPUT_TRAINING_FILE}", trainingFilePath).replace("{INPUT_TEST_FILE}", testFilePath).replace("{OUTPUT_FILE}", outputDirectoryPath + outputFileName);
 
         // Retrieve the results
-        HashMap<String, String> results = CommandLineClient.RunAnalysis(commandArgs, outputDirectoryPath);
+        HashMap<String, String> results = CommandLineClient.RunAnalysis(command, outputDirectoryPath);
 
         // Remove the input files
-        trainingCreator.DeleteTransposedTabDelimitedFile();
-        testCreator.DeleteTransposedTabDelimitedFile();
+        FileUtilities.DeleteFile(trainingFilePath);
+        FileUtilities.DeleteFile(testFilePath);
 
         // Parse the output
         String outputText = CommandLineClient.GetCommandResult(results, outputFileName);

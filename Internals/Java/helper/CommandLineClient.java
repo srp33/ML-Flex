@@ -17,9 +17,11 @@
 
 package mlflex.helper;
 
+import mlflex.core.Settings;
 import mlflex.core.Singletons;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,32 +36,34 @@ public class CommandLineClient
 
     /** Executes the specified command at the command line
      *
-     * @param commandArgs These values specify the application name followed by command-line arguments that should be passed to it
+     * @param commandText System command that will be executed
      * @return A map of keys and values that were returned by the command
      * @throws Exception
      */
-    public static HashMap<String, String> RunAnalysis(ArrayList<String> commandArgs) throws Exception
+    public static HashMap<String, String> RunAnalysis(String commandText) throws Exception
     {
-        return RunAnalysis(commandArgs, null);
+        return RunAnalysis(commandText, null);
     }
 
     /** Executes the specified command at the command line
      *
-     * @param commandArgs These values specify the application name followed by command-line arguments that should be passed to it
-     * @param outputDirectoryPath Absolute directory path where the output files will be stored temporarily
+     * @param commandText System command that will be executed
+     * @param outputDirectoryPath Absolute directory path where any output files will be stored temporarily
      * @return A map of keys and values that were returned by the command
      * @throws Exception
      */
-    public static HashMap<String, String> RunAnalysis(ArrayList<String> commandArgs, String outputDirectoryPath) throws Exception
+    public static HashMap<String, String> RunAnalysis(String commandText, String outputDirectoryPath) throws Exception
     {
-        Singletons.Log.Debug("Command args:");
-        Singletons.Log.Debug(commandArgs);
+        Singletons.Log.Debug("System command:");
+        Singletons.Log.Debug(commandText);
 
-        String[] args = ListUtilities.ConvertToStringArray(commandArgs);
+        // Write the command to a temporary script file. This helps avoid issues with quotes, etc.
+        String tempScriptFilePath = Settings.TEMP_DATA_DIR + MiscUtilities.GetUniqueID();
+        FileUtilities.WriteTextToFile(tempScriptFilePath, commandText);
+        new File(tempScriptFilePath).setExecutable(true);
 
-        // Start up an external process
-        ProcessBuilder processBuilder = new ProcessBuilder(args);
-        Process p = processBuilder.start();
+        // Execute the command via the temporary script
+        Process p = Runtime.getRuntime().exec(tempScriptFilePath);
 
         // Read the output and error streams from the process
         BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -97,17 +101,6 @@ public class CommandLineClient
         {
             Singletons.Log.Debug("Command error: " + error.toString());
 
-            Singletons.Log.Debug("Parameters:");
-            for (String arg : commandArgs)
-            {
-                Singletons.Log.Debug(arg);
-                if (FileUtilities.FileExists(arg))
-                {
-                    Singletons.Log.Debug("Parameter file text:");
-                    Singletons.Log.Debug(FileUtilities.ReadTextFile(arg));
-                }
-            }
-
             Singletons.Log.Debug("Output files:");
             for (java.io.File file : outputFiles)
             {
@@ -125,6 +118,8 @@ public class CommandLineClient
         // Clean up
         if (outputDirectoryPath != null)
             FileUtilities.RemoveDirectory(outputDirectoryPath);
+
+        FileUtilities.DeleteFile(tempScriptFilePath);
 
         return results;
     }

@@ -3,3 +3,4 @@ DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff
 CLASSIFICATION_ALGORITHMS=weka_naive_bayes
 TRAIN_INSTANCE_IDS=Experiments/UCI/iris_arff_train_ids.txt
 TEST_INSTANCE_IDS=Experiments/UCI/iris_arff_test_ids.txt
+NUM_ITERATIONS=1

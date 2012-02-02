@@ -20,7 +20,8 @@ package mlflex.learners;
 import mlflex.core.*;
 import mlflex.helper.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /** This class provides functionality for interfacing with the C5.0 Decision Trees software package.
  * @author Stephen Piccolo
@@ -28,13 +29,13 @@ import java.util.*;
 public class C5Learner extends AbstractMachineLearner
 {
     @Override
-    public ArrayList<String> SelectOrRankFeatures(ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
+    public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         throw new Exception("Not implemented");
     }
 
     @Override
-    public ModelPredictions TrainTest(ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> parameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
     {
         String uniqueID = MiscUtilities.GetUniqueID();
 
@@ -43,22 +44,17 @@ public class C5Learner extends AbstractMachineLearner
         new AnalysisFileCreator(Settings.TEMP_DATA_DIR, uniqueID, trainingData, trainingData, true).CreateC5TrainDataFile();
         new AnalysisFileCreator(Settings.TEMP_DATA_DIR, uniqueID, testData, trainingData, true).CreateC5TestDataFile();
 
-        String tempFileDescription = Settings.TEMP_DATA_DIR + uniqueID;
+        String inputPath = Settings.TEMP_DATA_DIR + uniqueID;
 
-        // Construct an object with command-line arguments specified and another for parameters
-        ArrayList<String> commandArgs = ListUtilities.CreateStringList(classificationParameters.get(0));
-        commandArgs.add("-f");
-        commandArgs.add(tempFileDescription);
+        // Construct command-line arguments
+        String command = commandTemplate.replace("{PROGRAM}", parameters.get(0)).replace("{INPUT_PATH}", inputPath);
 
-        // Invoke C5 from the command line to build the model
-        CommandLineClient.RunAnalysis(commandArgs);
+        CommandLineClient.RunAnalysis(command);
 
-        commandArgs = ListUtilities.CreateStringList(classificationParameters.get(1));
-        commandArgs.add("-f");
-        commandArgs.add(tempFileDescription);
+        command = commandTemplate.replace("{PROGRAM}", parameters.get(1)).replace("{INPUT_PATH}", inputPath);
 
         // Invoke C5 from the command line to make predictions for the test instances
-        HashMap<String, String> results = CommandLineClient.RunAnalysis(commandArgs);
+        HashMap<String, String> results = CommandLineClient.RunAnalysis(command);
 
         // Clean up
         FileUtilities.DeleteFilesInDirectory(Settings.TEMP_DATA_DIR, uniqueID + ".*");

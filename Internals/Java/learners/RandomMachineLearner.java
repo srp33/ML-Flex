@@ -30,7 +30,7 @@ import java.util.Random;
 public class RandomMachineLearner extends AbstractMachineLearner
 {
     @Override
-    public ArrayList<String> SelectOrRankFeatures(ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
+    public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         GenerateRandomSeed(trainData);
 
@@ -43,7 +43,7 @@ public class RandomMachineLearner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
     {
         DataInstanceCollection testDependentVariableInstances = Singletons.InstanceVault.TransformedDependentVariableInstances.Get(testData.GetIDs());
         String dependentVariableName = Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName;

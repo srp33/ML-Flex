@@ -30,21 +30,28 @@ public abstract class AbstractMachineLearner
     /** This method is used by custom machine learner classes either 1) to select features that the algorithm determines to be most relevant to the dependent variable, or 2) to rank all features according to their relevance to the dependent variable. If feature selection is used, the features should still be ranked, if possible.
      *
      *
+     *
+     * @param commandTemplate
      * @param algorithmParameters General parameter values that are used by the machine learner to execute. These are usually stored in the FeatureSelectionParameters.txt file in the Config directory.
      * @param trainData Training data instances
      * @return A list of data point names, ranked according to their perceived relevance to the dependent variable
      * @throws Exception
      */
-    public abstract ArrayList<String> SelectOrRankFeatures(ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception;
+    public abstract ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception;
 
     /** This method is used by custom machine learner classes to perform classification.
      *
      *
+     *
+     *
+     *
+     *
+     * @param commandTemplate
      * @param classificationParameters General parameter values that are used by the machine learner to perform classification. These parameters are usually stored in the ClassificationParameters.txt file in the Config directory.
      * @param trainingData Training data instances
      * @param testData Test data instances
      * @return Predictions for each test data instance
      * @throws Exception
      */
-    public abstract ModelPredictions TrainTest(ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception;
+    public abstract ModelPredictions TrainTest(String commandTemplate, ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception;
 }

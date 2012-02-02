@@ -99,8 +99,11 @@ public class Main
         Settings.PAUSE_SECONDS = Long.parseLong(GetArgValue(args, "PAUSE_SECONDS", "5"));
         Settings.EXPORT_DATA = Boolean.parseBoolean(GetArgValue(args, "EXPORT_DATA", "false"));
 
+        Settings.LEARNER_TEMPLATES_FILE = GetArgValue(args, "LEARNER_TEMPLATES_FILE", "Config/Learner_Templates.txt");
         Settings.CLASSIFICATION_ALGORITHMS_FILE = GetArgValue(args, "CLASSIFICATION_ALGORITHMS_FILE", "Config/Classification_Algorithms.txt");
         Settings.FEATURE_SELECTION_ALGORITHMS_FILE = GetArgValue(args, "FEATURE_SELECTION_ALGORITHMS_FILE", "Config/Feature_Selection_Algorithms.txt");
+
+        Settings.ParseLearners();
         Settings.ParseAlgorithms();
     }
 

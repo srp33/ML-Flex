@@ -1,43 +1,59 @@
-# This file contains a line for each classification algorithm that can be used within ML-Flex. See the README file for instructions on how to configure this file.
-#
+# This file contains a line for each classification algorithm that can be used within ML-Flex. Each line has at least two entries: 1) a unique key to represent the algorithm and 2) a learner template key. The unique key is used within Experiment files to reference the specified algorithm. The learner template key references a value within Learner_Templates.txt so that ML-Flex knows how to invoke the algorithm. Most algorithms also contain a series of parameters that will be passed to the algorithm when it is invoked. These parameters are defined uniquely by each learner.
+
 ##############################################
-# These are all Weka algorithms
+# The following algorithms are implemented in
+# the Weka data mining software tool. Any classifier
+# within Weka can be specified here. When using
+# the "Classify" tab within Weka Explorer,
+# choose an algorithm and the associated parameters
+# you desire. Then right-click on the algorithm 
+# and select "Copy configuration to clipboard."
+# Paste that information into an entry here.
 ##############################################
-weka_one_r;mlflex.learners.WekaLearner;java;weka.classifiers.rules.OneR;-B;6
-weka_svm_linear;mlflex.learners.WekaLearner;java;weka.classifiers.functions.LibSVM;-S;0;-K;0;-D;3;-G;0.0;-R;0.0;-N;0.5;-M;40.0;-C;1.0;-E;0.0010;-P;0.1;-B
-weka_svm_poly;mlflex.learners.WekaLearner;java;weka.classifiers.functions.LibSVM;-S;0;-K;1;-D;3;-G;0.0;-R;0.0;-N;0.5;-M;40.0;-C;1.0;-E;0.0010;-P;0.1;-B
-weka_svm_rbf;mlflex.learners.WekaLearner;java;weka.classifiers.functions.LibSVM;-S;0;-K;2;-D;3;-G;0.0;-R;0.0;-N;0.5;-M;40.0;-C;1.0;-E;0.0010;-P;0.1;-B
-weka_naive_bayes;mlflex.learners.WekaLearner;java;weka.classifiers.bayes.NaiveBayes;-K
-weka_conjunctive_rule;mlflex.learners.WekaLearner;java;weka.classifiers.rules.ConjunctiveRule;-N;3;-M;2.0;-P;-1;-S;1
-weka_decision_tree;mlflex.learners.WekaLearner;java;weka.classifiers.trees.J48;-C;0.25;-M;2
-weka_knn;mlflex.learners.WekaLearner;java;weka.classifiers.lazy.IB1
-weka_bagging;mlflex.learners.WekaLearner;java;weka.classifiers.meta.Bagging;-P;100;-S;1;-I;10;-W;weka.classifiers.trees.REPTree;--;-M;2;-V;0.0010;-N;3;-S;1;-L;-1
+weka_one_r;wekac;weka.classifiers.rules.OneR -B 6
+weka_svm_linear;wekac;weka.classifiers.functions.LibSVM -S 0 -K 0 -D 3 -G 0.0 -R 0.0 -N 0.5 -M 40.0 -C 1.0 -E 0.0010 -P 0.1 -B
+weka_svm_poly;wekac;weka.classifiers.functions.LibSVM -S 0 -K 1 -D 3 -G 0.0 -R 0.0 -N 0.5 -M 40.0 -C 1.0 -E 0.0010 -P 0.1 -B
+weka_svm_rbf;wekac;weka.classifiers.functions.LibSVM -S 0 -K 2 -D 3 -G 0.0 -R 0.0 -N 0.5 -M 40.0 -C 1.0 -E 0.0010 -P 0.1 -B
+weka_naive_bayes;wekac;weka.classifiers.bayes.NaiveBayes -K
+weka_conjunctive_rule;wekac;weka.classifiers.rules.ConjunctiveRule -N 3 -M 2.0 -P -1 -S 1
+weka_decision_tree;wekac;weka.classifiers.trees.J48 -C 0.25 -M 2
+weka_knn;wekac;weka.classifiers.lazy.IB1
+weka_bagging;wekac;weka.classifiers.meta.Bagging -P 100 -S 1 -I 10 -W weka.classifiers.trees.REPTree -- -M 2 -V 0.0010 -N 3 -S 1 -L -1
+
 ##############################################
 # This is Quinlan's C.0 Decision Trees learner
 ##############################################
-c50;mlflex.learners.C5Learner;Internals/CLibraries/c5.0;Internals/CLibraries/sample
+c50;c50;c5.0;sample
+
 ##############################################
-# These learners are from the Orange library
+# These learners are from the Orange library.
+# See the Orange documentation for information
+# about these parameters and for information
+# about other learners that can be applied.
 ##############################################
-orange_naive_bayes;mlflex.learners.OrangeLearner;python;orngBayes.BayesLearner()
-orange_decision_tree;mlflex.learners.OrangeLearner;python;orngTree.TreeLearner()
-orange_random_forest;mlflex.learners.OrangeLearner;python;orngEnsemble.RandomForestLearner()
-orange_svm_linear;mlflex.learners.OrangeLearner;python;orngSVM.SVMLearner(kernel_type=orange.SVMLearner.Linear, svm_type=orange.SVMLearner.C_SVC)
-orange_svm_poly;mlflex.learners.OrangeLearner;python;orngSVM.SVMLearnerEasy(kernel_type=orange.SVMLearner.RBF, svm_type=orange.SVMLearner.C_SVC)
-orange_svm_rbf;mlflex.learners.OrangeLearner;python;orngSVM.SVMLearnerEasy(kernel_type=orange.SVMLearner.Polynomial, svm_type=orange.SVMLearner.C_SVC)
+orange_naive_bayes;orangec;orngBayes.BayesLearner()
+orange_decision_tree;orangec;orngTree.TreeLearner()
+orange_svm_linear;orangec;orngSVM.SVMLearner(kernel_type=orange.SVMLearner.Linear, svm_type=orange.SVMLearner.C_SVC)
+orange_svm_poly;orangec;orngSVM.SVMLearnerEasy(kernel_type=orange.SVMLearner.RBF, svm_type=orange.SVMLearner.C_SVC)
+orange_svm_rbf;orangec;orngSVM.SVMLearnerEasy(kernel_type=orange.SVMLearner.Polynomial, svm_type=orange.SVMLearner.C_SVC)
+
 ###################################################
 # These learners are from the R statistical package
 # They are equipped only to handle continuous variables and/or discrete variables with two options. An error will be thrown if a discrete variable with 3+ options is used.
 ###################################################
-r_svm_rbf;mlflex.learners.RLearner;Rscript;svm_radial
-r_svm_linear;mlflex.learners.RLearner;Rscript;svm_linear
-r_svm_poly;mlflex.learners.RLearner;Rscript;svm_polynomial
+r_svm_rbf;r;svm_radial
+r_svm_linear;r;svm_linear
+r_svm_poly;r;svm_polynomial
+
 ##############################################
 # This algorithm is for random classification
 ##############################################
-random;mlflex.learners.RandomMachineLearner
+random;random
+
 ##############################################
-# These algorithms are for demo purposes
+# These algorithms are for demo purposes. See
+# http://mlflex.sourceforge.net/tutorial for a
+# description of how they work.
 ##############################################
-demo_arff_classifier;mlflex.learners.GenericArffLearner;python;Internals/Python/DemoArffClassifier.py;{INPUT_TRAINING_FILE};{INPUT_TEST_FILE};1;{OUTPUT_FILE}
-demo_delimited_classifier;mlflex.learners.GenericDelimitedLearner;python;Internals/Python/DemoDelimitedClassifier.py;{INPUT_TRAINING_FILE};{INPUT_TEST_FILE};1;{OUTPUT_FILE}
+demo_arff_classifier;demo_arff_c;1
+demo_delimited_classifier;demo_delimited_c;1

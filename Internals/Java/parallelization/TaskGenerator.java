@@ -283,7 +283,7 @@ public class TaskGenerator
         for (final AbstractDataProcessor processor : Singletons.ProcessorVault.IndependentVariableDataProcessors)
             for (final FeatureSelectionAlgorithm fsAlgorithm : Singletons.Config.GetFeatureSelectionAlgorithms(processor))
                 if (FeatureSelectionEvaluator.NeedToSelectFeatures(processor, fsAlgorithm))
-                    callables.add(new LockedCallable("FeatureSelectionResults/SaveMeanFeatureRanks/" + processor.GetDescription() + "/" + fsAlgorithm, "Save mean feature ranks for " + processor.GetDescription() + " " + fsAlgorithm.Description, new Callable<Object>()
+                    callables.add(new LockedCallable("FeatureSelectionResults/SaveMeanFeatureRanks/" + processor.GetDescription() + "/" + fsAlgorithm, "Save mean feature ranks for " + processor.GetDescription() + " " + fsAlgorithm.Key, new Callable<Object>()
                     {
                         public Object call() throws Exception
                         {

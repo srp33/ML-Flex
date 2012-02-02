@@ -1,25 +1,45 @@
-# This file contains a line for each feature-selection algorithm that can be used within ML-Flex. See the README file for instructions on how to configure this file.
-#
+# This file contains a line for each feature selection/ranking algorithm that can be used within ML-Flex. Each line has at least two entries: 1) a unique key to represent the algorithm and 2) a learner template key. The unique key is used within Experiment files to reference the specified algorithm. The learner template key references a value within Learner_Templates.txt so that ML-Flex knows how to invoke the algorithm. Most algorithms also contain a series of parameters that will be passed to the algorithm when it is invoked. These parameters are defined uniquely by each learner.
+
 ##############################################
-# These algorithms are from the Weka library
+# The following algorithms are implemented in
+# the Weka data mining software tool. Feature
+# selection algorithms within Weka can be
+# specified here. When using
+# the "Select attributes" tab within Weka Explorer,
+# choose the attribute evaluator and search
+# method, and associated parameters that you
+# desire to apply. Then right-click on the boxes
+# where these are specified and select 
+# "Copy configuration to clipboard."
+# Paste that information into an entry here.
+# Note that the search method must be specified 
+# after an -s switch and must be surrounded by
+# quotation marks.
 ##############################################
-weka_info_gain;mlflex.learners.WekaLearner;java;weka.attributeSelection.InfoGainAttributeEval;-s;weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1
-weka_svm_weights;mlflex.learners.WekaLearner;java;weka.attributeSelection.SVMAttributeEval;-X;1;-Y;10;-Z;10;-P;1.0E-25;-T;1.0E-10;-C;1.0;-N;0;-s;weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1
-weka_relieff;mlflex.learners.WekaLearner;java;weka.attributeSelection.ReliefFAttributeEval;-M;-1;-D;1;-K;10;-s;weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1
+weka_info_gain;wekaf;weka.attributeSelection.InfoGainAttributeEval -s "weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1"
+weka_svm_weights;wekaf;weka.attributeSelection.SVMAttributeEval -X 1 -Y 10 -Z 10 -P 1.0E-25 -T 1.0E-10 -C 1.0 -N 0 -s "weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1"
+weka_relieff;wekaf;weka.attributeSelection.ReliefFAttributeEval -M -1 -D 1 -K 10 -s "weka.attributeSelection.Ranker -T -1.7976931348623157E308 -N -1"
+
 ##############################################
-# These algorithms are from the Orange library
+# These learners are from the Orange library.
+# See the Orange documentation for information
+# about these parameters and for information
+# about other learners that can be applied.
 ##############################################
-orange_relieff;mlflex.learners.OrangeLearner;python;orngFSS.attMeasure(examples, orange.MeasureAttribute_relief(m=50))
-# The following algorithm can only be used on discrete variables
-orange_relevance;mlflex.learners.OrangeLearner;python;orngFSS.attMeasure(examples, orange.MeasureAttribute_relevance)
-# The following algorithm can only be used on continuous variables
-orange_info_gain;mlflex.learners.OrangeLearner;python;orngFSS.attMeasure(examples, orange.MeasureAttribute_info)
+orange_relieff;orangef;orngFSS.attMeasure(examples, orange.MeasureAttribute_relief(m=50))
+# The following algorithms can only be used on discrete variables
+orange_relevance;orangef;orngFSS.attMeasure(examples, orange.MeasureAttribute_relevance)
+orange_info_gain;orangef;orngFSS.attMeasure(examples, orange.MeasureAttribute_info)
+
 ##############################################
 # This algorithm is for random selection
 ##############################################
-random;mlflex.learners.RandomMachineLearner
+random;random
+
 ##############################################
-# These algorithms are for demo purposes
+# These algorithms are for demo purposes. See
+# http://mlflex.sourceforge.net/tutorial for a
+# description of how they work.
 ##############################################
-demo_arff_ranker;mlflex.learners.GenericArffLearner;python;Internals/Python/DemoArffFeatureRanker.py;{INPUT_FILE};1;{OUTPUT_FILE}
-demo_delimited_ranker;mlflex.learners.GenericDelimitedLearner;python;Internals/Python/DemoDelimitedFeatureRanker.py;{INPUT_FILE};1;{OUTPUT_FILE}
+demo_arff_ranker;demo_arff_f;1
+demo_delimited_ranker;demo_delimited_f;1

@@ -43,6 +43,9 @@ public class DescriptionFileSaver
         if (Settings.NeedToClassify())
         {
             // Copy the algorithm configuration files
+            FileUtilities.CopyFile(Settings.LEARNER_TEMPLATES_FILE, Settings.GetOutputSettingsDir(false) + new File(Settings.LEARNER_TEMPLATES_FILE).getName());
+
+            // Copy the algorithm configuration files
             FileUtilities.CopyFile(Settings.CLASSIFICATION_ALGORITHMS_FILE, Settings.GetOutputSettingsDir(false) + new File(Settings.CLASSIFICATION_ALGORITHMS_FILE).getName());
 
             if (Settings.NeedToSelectFeatures())

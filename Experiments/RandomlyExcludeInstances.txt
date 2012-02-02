@@ -2,3 +2,4 @@
 DATA_PROCESSORS=mlflex.dataprocessors.ArffDataProcessor("InputData/UCI/iris.arff")
 CLASSIFICATION_ALGORITHMS=weka_naive_bayes
 NUM_TRAINING_INSTANCES_TO_EXCLUDE_RANDOMLY=2
+NUM_ITERATIONS=1

@@ -53,6 +53,8 @@ public class Settings
     public static String OUTPUT_DIR;
     /** Path to the directory stores status files */
     public static String STATUS_DIR;
+    /** Path to a file that defines learner interfaces */
+    public static String LEARNER_TEMPLATES_FILE;
     /** Path to the file that contains configuration parameters for classification algorithms */
     public static String CLASSIFICATION_ALGORITHMS_FILE;
     /** Path to the file that contains configuration parameters for feature selection algorithms */
@@ -67,6 +69,8 @@ public class Settings
     public static long PAUSE_SECONDS;
     /** String that will be used throughout the experiment to indicate a missing value */
     public static String MISSING_VALUE_STRING = "?";
+    /** A map of the learners that have been configured by the user */
+    public static HashMap<String, LearnerConfig> LearnerConfigMap = new HashMap<String, LearnerConfig>();
     /** A map of all the classification algorithms that have been loaded into memory */
     public static HashMap<String, ClassificationAlgorithm> ClassificationAlgorithms = new HashMap<String, ClassificationAlgorithm>();
     /** A map of all the feature-selection algorithms that have been loaded into memory */
@@ -80,6 +84,26 @@ public class Settings
     /** Relative path to the directory containing HTML files for the output report */
     public static String HTML_RELATIVE_DIR = "Html/";
 
+    /** The purpose of this method is to parse the information that is listed in the learners configuration file.
+     *
+     * @throws Exception
+     */
+    public static void ParseLearners() throws Exception
+    {
+        for (String line : FileUtilities.ReadLinesFromFile(LEARNER_TEMPLATES_FILE))
+        {
+            if (line.startsWith("#") || line.trim().length() == 0) // Ignore comment characters
+                continue;
+
+            ArrayList<String> lineItems = ListUtilities.CreateStringList(line.split(";"));
+            String description = lineItems.get(0);
+            String learnerClassName = lineItems.get(1);
+            String commandTemplate = (lineItems.size() > 2) ? lineItems.get(2) : "";
+
+            LearnerConfigMap.put(description, new LearnerConfig(description, learnerClassName, commandTemplate));
+        }
+    }
+
     /** The purpose of this method is to parse the algorithms that have been defined in the algorithm configuration files.
      *
      * @throws Exception
@@ -88,33 +112,41 @@ public class Settings
     {
         for (String line : FileUtilities.ReadLinesFromFile(CLASSIFICATION_ALGORITHMS_FILE))
         {
-            if (line.startsWith("#")) // Ignore comment characters
+            if (line.startsWith("#") || line.trim().length() == 0) // Ignore comment characters
                 continue;
 
             ArrayList<String> lineItems = ListUtilities.CreateStringList(line.split(";"));
-            String description = lineItems.remove(0);
-            String learnerClassName = lineItems.remove(0);
-            ArrayList<String> parameters = lineItems;
-            ClassificationAlgorithms.put(description, new ClassificationAlgorithm(description, learnerClassName, parameters));
+            String key = lineItems.remove(0);
+            String learnerKey = lineItems.remove(0);
+
+            CheckLearnerKey(key, learnerKey);
+            ClassificationAlgorithms.put(key, new ClassificationAlgorithm(key, learnerKey, lineItems));
         }
 
         for (String line : FileUtilities.ReadLinesFromFile(FEATURE_SELECTION_ALGORITHMS_FILE))
         {
-            if (line.startsWith("#")) // Ignore comment characters
+            if (line.startsWith("#") || line.trim().length() == 0) // Ignore comment characters
                 continue;
 
             ArrayList<String> lineItems = ListUtilities.CreateStringList(line.split(";"));
 
-            String description = lineItems.remove(0);
-            String learnerClassName = lineItems.remove(0);
+            String key = lineItems.remove(0);
+            String learnerKey = lineItems.remove(0);
             ArrayList<String> parameters = lineItems;
 
-            FeatureSelectionAlgorithms.put(description, new FeatureSelectionAlgorithm(description, learnerClassName, parameters));
+            CheckLearnerKey(key, learnerKey);
+            FeatureSelectionAlgorithms.put(key, new FeatureSelectionAlgorithm(key, learnerKey, parameters));
         }
 
         // The following algorithms are made available to any experiment and aren't specified in the config file
-        FeatureSelectionAlgorithms.put("None", new FeatureSelectionAlgorithm("None"));
-        FeatureSelectionAlgorithms.put("PriorKnowledge", new FeatureSelectionAlgorithm("PriorKnowledge"));
+        FeatureSelectionAlgorithms.put("None", new FeatureSelectionAlgorithm("None", "", new ArrayList<String>()));
+        FeatureSelectionAlgorithms.put("PriorKnowledge", new FeatureSelectionAlgorithm("PriorKnowledge", "", new ArrayList<String>()));
+    }
+
+    private static void CheckLearnerKey(String algorithmKey, String learnerKey) throws Exception
+    {
+        if (!Settings.LearnerConfigMap.containsKey(learnerKey))
+            Singletons.Log.ExceptionFatal("A learner template key of " + learnerKey + " was specified for the " + algorithmKey + " algorithm, but no such learner template exists.");
     }
 
     /** Depending on the settings for the experiment, this method returns a path to where the export files should be saved.

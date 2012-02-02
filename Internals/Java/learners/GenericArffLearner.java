@@ -28,7 +28,7 @@ import java.util.HashMap;
 public class GenericArffLearner extends AbstractMachineLearner
 {
     @Override
-    public ArrayList<String> SelectOrRankFeatures(ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
+    public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         // Create an input file with the training data
         String inputFilePath = CreateInputFile(trainData);
@@ -39,17 +39,11 @@ public class GenericArffLearner extends AbstractMachineLearner
         // Specify the output file name
         String outFileName = GetRanksOutFileName();
 
-        // Create a list of arguments that will be passed to the program. Look for INPUT_FILE and OUTPUT_FILE tokens so these file paths can be passed to the program
-        ArrayList<String> commandArgs = new ArrayList<String>();
-        for (String algorithmParameter : algorithmParameters)
-        {
-            String parameter = algorithmParameter.replace("{INPUT_FILE}", inputFilePath);
-            parameter = parameter.replace("{OUTPUT_FILE}", outDirectory + outFileName);
-            commandArgs.add(parameter);
-        }
+        // Create command that will be passed to the program. Look for tokens so these file paths can be passed to the program
+        String command = commandTemplate.replace("{INPUT_TRAINING_FILE}", inputFilePath).replace("{OUTPUT_FILE}", outDirectory + outFileName).replace("{PARAMETERS}", "\"" + ListUtilities.Join(algorithmParameters, "\" \"") + "\"");
 
         // Invoke the program at the command line
-        HashMap<String, String> results = CommandLineClient.RunAnalysis(commandArgs, outDirectory);
+        HashMap<String, String> results = CommandLineClient.RunAnalysis(command, outDirectory);
 
         // Delete the input file
         FileUtilities.DeleteFile(inputFilePath);
@@ -62,7 +56,7 @@ public class GenericArffLearner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(ArrayList<String> algorithmParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
     {
         // Create an input file with the training data
         String inputTrainingFilePath = CreateInputFile(trainingData);
@@ -75,18 +69,11 @@ public class GenericArffLearner extends AbstractMachineLearner
         // Specify the output file name
         String outFileName = GetPredictionsOutFileName();
 
-        // Create a list of arguments that will be passed to the program. Look for INPUT_TRAINING_FILE and INPUT_TEST_FILE and OUTPUT_FILE tokens so these file paths can be passed to the program
-        ArrayList<String> commandArgs = new ArrayList<String>();
-        for (String algorithmParameter : algorithmParameters)
-        {
-            String parameter = algorithmParameter.replace("{INPUT_TRAINING_FILE}", inputTrainingFilePath);
-            parameter = parameter.replace("{INPUT_TEST_FILE}", inputTestFilePath);
-            parameter = parameter.replace("{OUTPUT_FILE}", outDirectory + outFileName);
-            commandArgs.add(parameter);
-        }
+        // Create command that will be passed to the program. Look for tokens so these file paths can be passed to the program
+        String command = commandTemplate.replace("{INPUT_TRAINING_FILE}", inputTrainingFilePath).replace("{INPUT_TEST_FILE}", inputTestFilePath).replace("{OUTPUT_FILE}", outDirectory + outFileName).replace("{PARAMETERS}", "\"" + ListUtilities.Join(algorithmParameters, "\" \"") + "\"");
 
         // Invoke the program at the command line
-        HashMap<String, String> results = CommandLineClient.RunAnalysis(commandArgs, outDirectory);
+        HashMap<String, String> results = CommandLineClient.RunAnalysis(command, outDirectory);
 
         // Delete the input files
         FileUtilities.DeleteFile(inputTrainingFilePath);

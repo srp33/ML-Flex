@@ -211,7 +211,7 @@ public class Config
      */
     public int GetNumIterations() throws Exception
     {
-        return GetIntValue("NUM_ITERATIONS", "1");
+        return GetIntValue("NUM_ITERATIONS", "10");
     }
 
     /** Indicates all the iterations that will be performed in an experiment.

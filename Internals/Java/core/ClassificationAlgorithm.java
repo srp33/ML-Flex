@@ -17,10 +17,8 @@
 
 package mlflex.core;
 
-import mlflex.learners.AbstractMachineLearner;
 import mlflex.helper.ListUtilities;
 
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 
 /** This class acts as a wrapper for performing classification tasks. It interprets parameters for executing these tasks, based on what has been configured in ML-Flex's configuration files.
@@ -28,23 +26,22 @@ import java.util.ArrayList;
  */
 public class ClassificationAlgorithm
 {
-    /** A description of the algorithm */
-    public String Description;
-    private AbstractMachineLearner _learner;
-    private ArrayList<String> _algorithmParameters;
+    public String Key;
+    public String LearnerKey;
+    public ArrayList<String> AlgorithmParameters;
 
     /** Constructor
      *
-     * @param description Name of the classification algorithm
-     * @param learnerClassName Full name of the ML-Flex Java class that extends AbstractMachineLearner that contains the algorithm's logic
+     * @param key Unique name to reference the classification algorithm
+     * @param learnerKey Key that corresponds with a configured learner
      * @param algorithmParameters List of parameters that are passed to the algorithm
      * @throws Exception
      */
-    public ClassificationAlgorithm(String description, String learnerClassName, ArrayList<String> algorithmParameters) throws Exception
+    public ClassificationAlgorithm(String key, String learnerKey, ArrayList<String> algorithmParameters) throws Exception
     {
-        Description = description;
-        _learner = (AbstractMachineLearner) ((Constructor) Class.forName(learnerClassName).getConstructor()).newInstance();
-        _algorithmParameters = algorithmParameters;
+        Key = key;
+        LearnerKey = learnerKey;
+        AlgorithmParameters = algorithmParameters;
     }
 
     /** This is a pass-through method to perform training and testing. It throws a detailed exception if it cannot be performed.
@@ -74,7 +71,7 @@ public class ClassificationAlgorithm
         if (ListUtilities.Intersect(trainData.GetIDs(), testData.GetIDs()).size() > 0)
         {
             String errorMessage = "The training and test sets overlap. ";
-            errorMessage += "Algorithm: " + Description + ". ";
+            errorMessage += "Algorithm: " + Key + ". ";
             errorMessage += "Train IDs: " + ListUtilities.Join(trainData.GetIDs(), ", ");
             errorMessage += "Test IDs: " + ListUtilities.Join(testData.GetIDs(), ", ") + ".";
 
@@ -87,14 +84,17 @@ public class ClassificationAlgorithm
         try
         {
             // Execute the learning task
-            return _learner.TrainTest(_algorithmParameters, trainData, testData);
+            LearnerConfig learnerConfig = Settings.LearnerConfigMap.get(LearnerKey);
+            String commandTemplate = learnerConfig.CommandTemplate.replace("{Settings.MAIN_DIR}", Settings.MAIN_DIR);
+
+            return learnerConfig.MachineLearner.TrainTest(commandTemplate, AlgorithmParameters, trainData, testData);
         }
         catch (Exception ex)
         {
             Singletons.Log.Exception(ex);
 
             String errorMessage = "An exception occurred while training and testing. ";
-            errorMessage += "Algorithm: " + Description + ". ";
+            errorMessage += "Algorithm: " + Key + ". ";
             errorMessage += "Training data (first five instances):\n" + trainData.toShortString() + "\n";
             errorMessage += "Test data (first five instances):\n" + testData.toShortString() + "\n";
             errorMessage += "Dependent variable data (first five instances):\n" + dependentVariableInstances.toShortString() + "\n";
@@ -105,6 +105,6 @@ public class ClassificationAlgorithm
     @Override
     public String toString()
     {
-        return Description;
+        return Key;
     }
 }

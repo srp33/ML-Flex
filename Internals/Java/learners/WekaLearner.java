@@ -36,21 +36,17 @@ import java.util.HashSet;
 public class WekaLearner extends AbstractMachineLearner
 {
     @Override
-    public ArrayList<String> SelectOrRankFeatures(ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
+    public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         // Create an ARFF file with the training data
-        AnalysisFileCreator fileCreator = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, null, true).CreateArffFile();
-        String arffFilePath = fileCreator.GetArffFilePath();
+        String arffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, null, true).CreateArffFile().GetArffFilePath();
 
-        // Build arguments that will be passed at the command line to Weka
-        ArrayList<String> commandArgs = new ArrayList<String>(algorithmParameters);
-        commandArgs.add(1, "-classpath");
-        commandArgs.add(2, ".:lib/weka.jar");
-        commandArgs.add("-i");
-        commandArgs.add(arffFilePath);
+        // Replace token to indicate path to input file
+        String command = commandTemplate.replace("{INPUT_TRAINING_FILE}", arffFilePath);
+        command = command.replace("{ALGORITHM}", algorithmParameters.get(0));
 
         // Invoke Weka at the command line
-        HashMap<String, String> results = CommandLineClient.RunAnalysis(commandArgs);
+        HashMap<String, String> results = CommandLineClient.RunAnalysis(command);
 
         // Delete the ARFF file
         FileUtilities.DeleteFile(arffFilePath);
@@ -75,36 +71,36 @@ public class WekaLearner extends AbstractMachineLearner
              }
         }
 
-        throw new Exception("Weka found no selected attributes. Output: " + output);
+        throw new Exception("Weka found no selected attributes. Command: " + command + ". Output: " + output);
     }
 
     @Override
-    public ModelPredictions TrainTest(ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData) throws Exception
     {
         // Create ARFF file for training data
-        AnalysisFileCreator trainingFileCreator = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, testData, true).CreateArffFile();
-        String trainingArffFilePath = trainingFileCreator.GetArffFilePath();
+        String trainingArffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, testData, true).CreateArffFile().GetArffFilePath();
 
         // Create ARFF file for test data
-        AnalysisFileCreator testFileCreator = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), testData, trainData, true).CreateArffFile();
-        String testArffFilePath = testFileCreator.GetArffFilePath();
+        String testArffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), testData, trainData, true).CreateArffFile().GetArffFilePath();
 
-        // Build arguments that will be passed at the command line to Weka
-        ArrayList<String> commandArgs = new ArrayList<String>(algorithmParameters);
-        commandArgs.add(1, "-classpath");
-        commandArgs.add(2, ".:lib/weka.jar:lib/libsvm.jar");
-        commandArgs.add("-t");
-        commandArgs.add(trainingArffFilePath);
-        commandArgs.add("-T");
-        commandArgs.add(testArffFilePath);
-        commandArgs.add("-p");
-        commandArgs.add("0");
-        commandArgs.add("-distribution");
+        // Replace tokens to indicate paths to input files
+        String command = commandTemplate.replace("{INPUT_TRAINING_FILE}", trainingArffFilePath);
+        command = command.replace("{INPUT_TEST_FILE}", testArffFilePath);
+
+        // Parse the classifier information and paste it together in proper order
+        String classifier = algorithmParameters.get(0);
+        String additionalParameters = "";
+        if (classifier.contains(" --"))
+        {
+            additionalParameters = classifier.substring(classifier.indexOf(" --"));
+            classifier = classifier.substring(0, classifier.indexOf(" --"));
+        }
+        command = command.replace("{ALGORITHM}", classifier) + additionalParameters;
 
         try
         {
             // Invoke Weka at the command line
-            HashMap<String, String> results = CommandLineClient.RunAnalysis(commandArgs);
+            HashMap<String, String> results = CommandLineClient.RunAnalysis(command);
 
             // Delete ARFF files
             FileUtilities.DeleteFile(trainingArffFilePath);

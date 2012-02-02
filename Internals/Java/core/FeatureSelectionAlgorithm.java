@@ -17,9 +17,6 @@
 
 package mlflex.core;
 
-import mlflex.learners.AbstractMachineLearner;
-
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 
 /** This class acts as a wrapper for performing feature-selection tasks. It interprets parameters for executing these tasks, based on what has been configured in ML-Flex's configuration files.
@@ -27,35 +24,22 @@ import java.util.ArrayList;
  */
 public class FeatureSelectionAlgorithm
 {
-    /** Description of the algorithm */
-    public String Description;
-
-    private AbstractMachineLearner _learner;
-    private ArrayList<String> _algorithmParameters;
+    public String Key;
+    public String LearnerKey;
+    public ArrayList<String> AlgorithmParameters;
 
     /** Constructor
      *
-     * @param description Name of the algorithm
-     */
-    public FeatureSelectionAlgorithm(String description)
-    {
-        Description = description;
-        _learner = null;
-        _algorithmParameters = null;
-    }
-
-    /** Constructor
-     *
-     * @param description Name of the algorithm
-     * @param learnerClassName Full name of the ML-Flex Java class that extends AbstractMachineLearner that contains the algorithm's logic
+     * @param key Unique name to reference the algorithm
+     * @param learnerKey Unique name of the ML-Flex Java class that extends AbstractMachineLearner and contains the logic for interfacing with the external library (where applicable)
      * @param algorithmParameters List of parameters that are passed to the algorithm
      * @throws Exception
      */
-    public FeatureSelectionAlgorithm(String description, String learnerClassName, ArrayList<String> algorithmParameters) throws Exception
+    public FeatureSelectionAlgorithm(String key, String learnerKey, ArrayList<String> algorithmParameters) throws Exception
     {
-        Description = description;
-        _learner = (AbstractMachineLearner) ((Constructor) Class.forName(learnerClassName).getConstructor()).newInstance();
-        _algorithmParameters = algorithmParameters;
+        Key = key;
+        LearnerKey = learnerKey;
+        AlgorithmParameters = algorithmParameters;
     }
 
     /** This is a pass-through method to rank/select features. It throws a detailed exception if it cannot be performed.
@@ -76,14 +60,17 @@ public class FeatureSelectionAlgorithm
         try
         {
             // Perform the actual feature ranking
-            return _learner.SelectOrRankFeatures(_algorithmParameters, trainData.Clone());
+            LearnerConfig learnerConfig = Settings.LearnerConfigMap.get(LearnerKey);
+            String commandTemplate = learnerConfig.CommandTemplate.replace("{Settings.MAIN_DIR}", Settings.MAIN_DIR);
+
+            return learnerConfig.MachineLearner.SelectOrRankFeatures(commandTemplate, AlgorithmParameters, trainData.Clone());
         }
         catch (Exception ex)
         {
             Singletons.Log.Exception(ex);
 
             String errorMessage = "An exception occurred while selecting features. ";
-            errorMessage += "Algorithm: " + Description + ". ";
+            errorMessage += "Algorithm Key: " + Key + ". ";
             errorMessage += "Train data (first five instances):\n" + trainData.toShortString() + "\n";
             errorMessage += "Dependent variable data (first five instances):\n" + Singletons.InstanceVault.TransformedDependentVariableInstances.toShortString() + "\n";
 
@@ -97,7 +84,7 @@ public class FeatureSelectionAlgorithm
      */
     public boolean IsNone()
     {
-        return Description.equals("None");
+        return Key.equals("None");
     }
 
     /** Indicates wheter prior-knowledge selection/ranking shold be performed. In this approach, the user typically specifies a list of features that are considered to be most informative based on a literature review.
@@ -106,12 +93,12 @@ public class FeatureSelectionAlgorithm
      */
     public boolean IsPriorKnowledge()
     {
-        return Description.equals("PriorKnowledge");
+        return Key.equals("PriorKnowledge");
     }
 
     @Override
     public String toString()
     {
-        return Description;
+        return Key;
     }
 }

@@ -1,0 +1,40 @@
+# This file contains "learner templates," which specify how ML-Flex should interface with third-party machine-learning software and with custom learners that have been packaged within ML-Flex. Each entry has two mandatory values: 1) a user-specified key, and 2) the full name of a Java class that inherits from mlflex.learners.AbstractMachineLearner. The Java class should contain logic for interfacing between ML-Flex and the learner. Several such classes are provided with Weka, and users can define their own. In most cases, the entries contain a third value, which is a template that will be invoked at the command line for the learner. The templates usually contain placeholder/tokens to indicate where in the command the paths to input files and algorithm parameters should be specified. ML-Flex will replace such tokens with actual values before invoking the command. The keys specified here can be referenced from Classification_Algorithms.txt or Feature_Selection_Algorithms.txt.
+
+##############################################
+# WEKA data mining software
+# http://www.cs.waikato.ac.nz/ml/weka/
+##############################################
+wekac;mlflex.learners.WekaLearner;java -classpath {Settings.MAIN_DIR}:{Settings.MAIN_DIR}lib/weka.jar:{Settings.MAIN_DIR}lib/libsvm.jar {ALGORITHM} -t {INPUT_TRAINING_FILE} -T {INPUT_TEST_FILE} -p 0 -distribution
+wekaf;mlflex.learners.WekaLearner;java -classpath {Settings.MAIN_DIR}:{Settings.MAIN_DIR}lib/weka.jar {ALGORITHM} -i {INPUT_TRAINING_FILE}
+
+##############################################
+# Quinlan's C.0 Decision Trees
+# http://www.rulequest.com/see5-info.html
+##############################################
+c50;mlflex.learners.C5Learner;{Settings.MAIN_DIR}Internals/CLibraries/{PROGRAM} -f {INPUT_PATH}
+
+##############################################
+# Orange machine learning library
+# http://orange.biolab.si/
+##############################################
+orangec;mlflex.learners.OrangeLearner;python {Settings.MAIN_DIR}Internals/Python/OrangeExec.py trainTest {ALGORITHM} {INPUT_TRAINING_FILE} {INPUT_TEST_FILE} {PREDICTIONS_FILE} {PROBABILITIES_FILE}
+orangef;mlflex.learners.OrangeLearner;python {Settings.MAIN_DIR}Internals/Python/OrangeExec.py rankFeatures {ALGORITHM} {INPUT_TRAINING_FILE} {OUTPUT_FILE}
+
+###################################################
+# R statistical package
+# http://www.r-project.org
+###################################################
+r;mlflex.learners.RLearner;Rscript --vanilla {Settings.MAIN_DIR}Internals/R/Predict.R {ALGORITHM} {INPUT_TRAINING_FILE} {INPUT_TEST_FILE} {OUTPUT_FILE}
+
+##############################################
+# Random learning
+##############################################
+random;mlflex.learners.RandomMachineLearner
+
+##############################################
+# Demo
+##############################################
+demo_arff_c;mlflex.learners.GenericArffLearner;python {Settings.MAIN_DIR}Internals/Python/DemoArffClassifier.py {INPUT_TRAINING_FILE} {INPUT_TEST_FILE} {PARAMETERS} {OUTPUT_FILE}
+demo_arff_f;mlflex.learners.GenericArffLearner;python {Settings.MAIN_DIR}Internals/Python/DemoArffFeatureRanker.py {INPUT_TRAINING_FILE} {PARAMETERS} {OUTPUT_FILE}
+demo_delimited_c;mlflex.learners.GenericDelimitedLearner;python {Settings.MAIN_DIR}Internals/Python/DemoDelimitedClassifier.py {INPUT_TRAINING_FILE} {INPUT_TEST_FILE} {PARAMETERS} {OUTPUT_FILE}
+demo_delimited_f;mlflex.learners.GenericDelimitedLearner;python {Settings.MAIN_DIR}Internals/Python/DemoDelimitedFeatureRanker.py {INPUT_TRAINING_FILE} {PARAMETERS} {OUTPUT_FILE}

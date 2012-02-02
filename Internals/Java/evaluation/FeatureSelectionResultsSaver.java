@@ -61,7 +61,7 @@ public class FeatureSelectionResultsSaver
             Singletons.Log.Debug("Done getting ranked features for outer fold " + outerFold);
 
             if (rankedFeatures.size() == 0)
-                throw new Exception("An error occurred when trying to save mean feature ranks file for outer fold " + outerFold + ", feature selection algorithm " + _algorithm.Description + " and " + _processor.GetDescription() + ". No features were selected.");
+                throw new Exception("An error occurred when trying to save mean feature ranks file for outer fold " + outerFold + ", feature selection algorithm " + _algorithm.Key + " and " + _processor.GetDescription() + ". No features were selected.");
 
             Singletons.Log.Debug("Combining ranked features for outer fold " + outerFold);
             rankedLists.add(rankedFeatures);
@@ -123,6 +123,6 @@ public class FeatureSelectionResultsSaver
      */
     public String GetOutFilePath(boolean appendIterationIfMoreThanOne) throws Exception
     {
-        return Settings.GetOutputResultsDir(_processor.GetDescription() + "/" + _algorithm.Description + "/", appendIterationIfMoreThanOne) + "Feature_Ranks.txt";
+        return Settings.GetOutputResultsDir(_processor.GetDescription() + "/" + _algorithm.Key + "/", appendIterationIfMoreThanOne) + "Feature_Ranks.txt";
     }
 }

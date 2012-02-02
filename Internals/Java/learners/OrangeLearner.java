@@ -31,27 +31,22 @@ import java.util.*;
 public class OrangeLearner extends AbstractMachineLearner
 {
     @Override
-    public ArrayList<String> SelectOrRankFeatures(ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
+    public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         // Create a file with the training data that can be used as an input to Orange
-        AnalysisFileCreator creator = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeDataForRanking_" + MiscUtilities.GetUniqueID(), trainData, null, true);
+        String dataFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeDataForRanking_" + MiscUtilities.GetUniqueID(), trainData, null, true).CreateOrangeFile().GetOrangeFilePath();
 
-        // Specify file and directory paths
-        String dataFilePath = creator.CreateOrangeFile().GetOrangeFilePath();
+        // Specify output paths
         String outputDirectoryPath = Settings.TEMP_RESULTS_DIR + MiscUtilities.GetUniqueID() + "/";
         String outputFileName = "RankedFeatures_" + MiscUtilities.GetUniqueID() + ".txt";
 
         FileUtilities.CreateDirectoryIfNotExists(outputDirectoryPath);
 
         // Build the command arguments that will be passed to Orange
-        ArrayList<String> commandArgs = new ArrayList<String>(algorithmParameters);
-        commandArgs.add(1, Settings.INTERNALS_DIR + "Python/OrangeExec.py");
-        commandArgs.add(2, "rankFeatures");
-        commandArgs.add(dataFilePath);
-        commandArgs.add(outputDirectoryPath + outputFileName);
+        String command = commandTemplate.replace("{ALGORITHM}", "\"" + algorithmParameters.get(0) + "\"").replace("{INPUT_TRAINING_FILE}", dataFilePath).replace("{OUTPUT_FILE}", outputDirectoryPath + outputFileName);
 
         // Invoke Orange at the command line
-        HashMap<String, String> results = CommandLineClient.RunAnalysis(commandArgs, outputDirectoryPath);
+        HashMap<String, String> results = CommandLineClient.RunAnalysis(command, outputDirectoryPath);
 
         // Parse the selected features from the output
         ArrayList<String> features = ListUtilities.CreateStringList(CommandLineClient.GetCommandResult(results, outputFileName).split("\n"));
@@ -64,15 +59,13 @@ public class OrangeLearner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData) throws Exception
     {
         // Create the input file for training data
-        AnalysisFileCreator trainingCreator = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeTrain_" + MiscUtilities.GetUniqueID(), trainData, testData, true);
-        trainingCreator.CreateOrangeFile();
+        String trainingFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeTrain_" + MiscUtilities.GetUniqueID(), trainData, testData, true).CreateOrangeFile().GetOrangeFilePath();
 
         // Create the input file for test data
-        AnalysisFileCreator testCreator = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeTest_" + MiscUtilities.GetUniqueID(), testData, trainData, false);
-        testCreator.CreateOrangeFile();
+        String testFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeTest_" + MiscUtilities.GetUniqueID(), testData, trainData, false).CreateOrangeFile().GetOrangeFilePath();
 
         // Specify file paths
         String outputDirectoryPath = Settings.TEMP_RESULTS_DIR + MiscUtilities.GetUniqueID() + "/";
@@ -82,16 +75,10 @@ public class OrangeLearner extends AbstractMachineLearner
         FileUtilities.CreateDirectoryIfNotExists(outputDirectoryPath);
 
         // Construct the command arguments that will be passed to Orange
-        ArrayList<String> commandArgs = new ArrayList<String>(algorithmParameters);
-        commandArgs.add(1, Settings.INTERNALS_DIR + "Python/OrangeExec.py");
-        commandArgs.add(2, "trainTest");
-        commandArgs.add(trainingCreator.GetOrangeFilePath());
-        commandArgs.add(testCreator.GetOrangeFilePath());
-        commandArgs.add(outputDirectoryPath + predictionsFileName);
-        commandArgs.add(outputDirectoryPath + probabilitiesFileName);
+        String command = commandTemplate.replace("{ALGORITHM}", "\"" + algorithmParameters.get(0) + "\"").replace("{INPUT_TRAINING_FILE}", trainingFilePath).replace("{INPUT_TEST_FILE}", testFilePath).replace("{PREDICTIONS_FILE}", outputDirectoryPath + predictionsFileName).replace("{PROBABILITIES_FILE}", outputDirectoryPath + probabilitiesFileName);
 
         // Obtain results that resulted from Orange processing
-        HashMap<String, String> results = CommandLineClient.RunAnalysis(commandArgs, outputDirectoryPath);
+        HashMap<String, String> results = CommandLineClient.RunAnalysis(command, outputDirectoryPath);
 
         // Get raw prediction information
         String predictionText = CommandLineClient.GetCommandResult(results, predictionsFileName);
@@ -120,8 +107,8 @@ public class OrangeLearner extends AbstractMachineLearner
         }
 
         // Clean up
-        trainingCreator.DeleteOrangeFile();
-        testCreator.DeleteOrangeFile();
+        FileUtilities.DeleteFile(trainingFilePath);
+        FileUtilities.DeleteFile(testFilePath);
 
         return new ModelPredictions(CommandLineClient.GetCommandResult(results, CommandLineClient.STANDARD_OUT_KEY), new Predictions(predictions));
     }
