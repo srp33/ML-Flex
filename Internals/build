@@ -1,27 +1,38 @@
 #!/bin/bash
 
-buildDir=builddir
+set -o errexit
+
+currentDir=$(pwd)
+buildDir=$currentDir/builddir
 
 rm -rf $buildDir
+mkdir -p $buildDir/src/mlflex
 mkdir -p $buildDir/lib
 
-cd Java
-find . -depth -type f -name '*.java' | cpio --pass-through --preserve-modification-time --make-directories --quiet ../$buildDir/src/mlflex
-cd ..
+cd /Users/srp33/Dropbox/Eclipse/mlflex/src/mlflex
+for f in $(find . -depth -type f -name '*.java')
+do
+  d=$(dirname $f)
 
-cp lib/*.jar $buildDir/lib
-cp build.xml $buildDir
+  mkdir -pv $buildDir/src/mlflex/$d
+  cp -rvp $f $buildDir/src/mlflex/$d/$(basename $f)
+done
+
+cd $currentDir
+
+cp -v lib/*.jar $buildDir/lib/
+cp -v scripts/build.xml $buildDir
 
 cd $buildDir
 
 find src -name *.java > sources_list.txt
 javac -Djava.ext.dirs=lib @sources_list.txt
 
-if [ "$1" != "NO" ]
-then
-  mkdir docs
-  javadoc -protected -splitindex -author -version -nodeprecated -extdirs lib -d docs @sources_list.txt -sourcepath src
-fi
+#if [ "$1" != "NO" ]
+#then
+#  mkdir docs
+#  javadoc -protected -splitindex -author -version -nodeprecated -extdirs lib -d docs @sources_list.txt -sourcepath src
+#fi
 
 rm sources_list.txt
 
@@ -31,15 +42,18 @@ rm build.xml
 
 echo `date +%m-%d-%Y-%H-%M` > Version.txt
 
-cp mlflex.jar ../../
-cp Version.txt ../../
+mkdir -p ../release
+rm -rf ../release/*
 
-if [ "$1" != "NO" ]
-then
-  cp -r docs ../Java/
-fi
+cp -v mlflex.jar ../release/
+cp -v Version.txt ../release/
 
-cp -r lib ../../
+#if [ "$1" != "NO" ]
+#then
+#  cp -r docs ../release/
+#fi
+
+cp -r lib ../release/
 
 cd ..
 rm -rf $buildDir
