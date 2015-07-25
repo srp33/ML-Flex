@@ -1,0 +1,6 @@
+# This experiment is used to test a scenario where multiple data processors are used. The "random" classification algorithm is used. This algorithm randomly assigns instances to a class.
+DATA_PROCESSORS=mlflex.dataprocessors.DelimitedDataProcessor("InputData/Cancer_Clinical.txt");mlflex.dataprocessors.AggregateDataProcessor;mlflex.dataprocessors.DelimitedDataProcessor("InputData/Cancer_GeneExpression.txt");mlflex.dataprocessors.DelimitedDataProcessor("InputData/Cancer_Class.txt")
+CLASSIFICATION_ALGORITHMS=random
+NUM_OUTER_CROSS_VALIDATION_FOLDS=1
+NUM_INNER_CROSS_VALIDATION_FOLDS=1
+NUM_ITERATIONS=1
