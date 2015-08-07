@@ -2,6 +2,8 @@
 
 set -o errexit
 
+javaDir="/System/Library/Frameworks/JavaVM.framework/Versions/1.6.0/Commands"
+
 currentDir=$(pwd)
 buildDir=$currentDir/builddir
 
@@ -26,12 +28,12 @@ cp -v scripts/build.xml $buildDir
 cd $buildDir
 
 find src -name *.java > sources_list.txt
-javac -Djava.ext.dirs=lib @sources_list.txt
+$javaDir/javac -Djava.ext.dirs=lib @sources_list.txt
 
 #if [ "$1" != "NO" ]
 #then
 #  mkdir docs
-#  javadoc -protected -splitindex -author -version -nodeprecated -extdirs lib -d docs @sources_list.txt -sourcepath src
+#  $javaDir/javadoc -protected -splitindex -author -version -nodeprecated -extdirs lib -d docs @sources_list.txt -sourcepath src
 #fi
 
 rm sources_list.txt
