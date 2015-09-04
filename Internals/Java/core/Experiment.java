@@ -77,10 +77,7 @@ public class Experiment
 
         // The following steps prepare the data that will be used for a given experiment. Because the same data will be used in all iterations, these steps need only be performed on the first iteration.
         if (Config.IsFirstIteration())
-        {
-            ProcessRawMetadata();
             ProcessRawAnalysisData();
-        }
 
         // Load data into memory before performing evaluation steps
         Singletons.InstanceVault.LoadDataInstancesIntoMemory();
@@ -177,15 +174,6 @@ public class Experiment
 
         // Get the saved seed
         Singletons.RandomSeed = Long.parseLong(FileUtilities.ReadScalarFromFile(randomSeedFilePath));
-    }
-
-    /** Processes any raw metadata that have been specified by the user for this experiment.
-     *
-     * @throws Exception
-     */
-    private void ProcessRawMetadata() throws Exception
-    {
-        MultiThreadedTaskHandler.ExecuteLockTasks("Process raw metadata", TaskGenerator.GetProcessRawMetadataTasks());
     }
 
     /** Parses and filters and saves all raw analysis data into the ML-Flex native format.

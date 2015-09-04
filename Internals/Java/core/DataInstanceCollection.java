@@ -25,10 +25,12 @@ import mlflex.helper.*;
 import mlflex.parallelization.MultiThreadedTaskHandler;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.Callable;
+import java.util.TreeMap;
 
 /** This class is designed to store all data for a set of data instances. It provides methods that make it easier to create, retrieve, update, and delete data values for these instances.
  * @author Stephen Piccolo
@@ -37,12 +39,15 @@ public class DataInstanceCollection implements Iterable<DataValues>
 {
     /** This value is placed at the end of a file that contains a serialized version of this object. It's used to verify that the entire file was stored properly. */
     public static String END_OF_FILE_MARKER = "[EOF]";
-    private ArrayList<DataValues> _instances;
+    //private ArrayList<DataValues> _instances;
+    //private TreeMap<String, DataValues> _instances;
+    private HashMap<String, DataValues> _instances;
 
     /** Default constructor */
     public DataInstanceCollection()
     {
-        this(new ArrayList<DataValues>());
+//        _instances = new TreeMap<String, DataValues>();
+        _instances = new HashMap<String, DataValues>();
     }
 
     /** Constructor that starts with a single instance
@@ -51,8 +56,8 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public DataInstanceCollection(DataValues instance)
     {
-        _instances = new ArrayList<DataValues>();
-        _instances.add(instance);
+    	this();
+        Add(instance);
     }
 
     /** Constructor that starts with a list of instances
@@ -61,7 +66,10 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public DataInstanceCollection(ArrayList<DataValues> instances)
     {
-        _instances = instances;
+    	this();
+    	
+        for (DataValues instance : instances)
+            Add(instance);
     }
 
     /** Constructor that starts with another collection of instances
@@ -71,8 +79,9 @@ public class DataInstanceCollection implements Iterable<DataValues>
     public DataInstanceCollection(DataInstanceCollection instances)
     {
         this();
+        
         for (DataValues instance : instances)
-            _instances.add(instance);
+            Add(instance);
     }
 
     /** Adds a data instance to this collection
@@ -81,7 +90,16 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public void Add(DataValues instance)
     {
-        _instances.add(instance);
+    	if (_instances.containsKey(instance.GetID()))
+    	{
+    		DataValues existing = _instances.get(instance.GetID());
+    		existing.AddDataPoints(instance);
+            _instances.put(instance.GetID(), existing);
+    	}
+    	else
+    	{
+            _instances.put(instance.GetID(), instance);
+    	}
     }
 
     /** Adds a collection of data instances to this collection.
@@ -134,7 +152,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public DataInstanceCollection ClearDataPoints()
     {
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
             UpdateInstance(instance.ClearDataPoints());
 
         return this;
@@ -185,7 +203,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public boolean Contains(DataValues instance)
     {
-        return _instances.contains(instance);
+        return _instances.containsKey(instance.GetID());
     }
 
     /** Indicates whether this collection contains the specified data instance.
@@ -195,7 +213,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public boolean Contains(String instanceID)
     {
-        return Contains(new DataValues(instanceID));
+        return _instances.containsKey(instanceID);
     }
 
     /** Creates a new collection that contains only data instances with the specified value for the specified data point.
@@ -224,19 +242,20 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public void FormatDataPointNames()
     {
-        for (DataValues patient : this)
-            patient.FormatDataPointNames();
+        for (DataValues instance : this)
+            instance.FormatDataPointNames();
     }
 
-    /** Gets the data instance at the specified index.
-     *
-     * @param index Query index
-     * @return Data instance at the specified index
-     */
-    public DataValues Get(int index)
-    {
-        return _instances.get(index);
-    }
+//    /** Gets the data instance at the specified index.
+//     *
+//     * @param index Query index
+//     * @return Data instance at the specified index
+//     */
+//    public DataValues Get(int index)
+//    {
+//        String instanceID = (String)_instances.keySet().toArray()[index];
+//        return _instances.get(instanceID);
+//    }
 
     /** Gets a collection of data instances that match the specified data instance IDs.
      *
@@ -261,10 +280,9 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public DataValues Get(String id)
     {
-        int index = _instances.indexOf(new DataValues(id));
+    	if (Contains(id))
+    		return _instances.get(id);
 
-        if (index > -1)
-            return _instances.get(index);
         return null;
     }
 
@@ -276,7 +294,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         HashSet<String> names = new HashSet<String>();
 
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
             names.addAll(instance.GetDataPointNames());
 
         return new ArrayList<String>(names);
@@ -307,7 +325,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         DataValues values = new DataValues(dataPointName);
 
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
             values.AddDataPoint(instance.GetID(), instance.GetDataPointValue(dataPointName));
 
         return values;
@@ -321,7 +339,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         ArrayList<String> ids = new ArrayList<String>();
 
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
             ids.add(instance.GetID());
 
         return ids;
@@ -344,7 +362,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         double numNotMissing = 0.0;
 
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
             numNotMissing += instance.GetNumNotMissingValues();
 
         double proportionMissing = 1 - (numNotMissing / ((double) Size() * (double) GetNumDataPoints()));
@@ -360,7 +378,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         HashSet<String> values = new HashSet<String>();
 
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
         {
             String value = instance.GetDataPointValue(dataPointName);
             if (value != null && !value.equals(Settings.MISSING_VALUE_STRING))
@@ -499,14 +517,12 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public void RemoveDataPointName(String dataPointName)
     {
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
         {
-            int index = _instances.indexOf(instance);
-
-            if (index > -1)
-            {
+        	if (Contains(instance))  
+        	{
                 instance.RemoveDataPoint(dataPointName);
-                _instances.set(index, instance);
+                _instances.put(instance.GetID(), instance);
             }
         }
     }
@@ -537,7 +553,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     public void RemoveInstance(String id)
     {
         if (Contains(id))
-            _instances.remove(_instances.indexOf(new DataValues(id)));
+        	_instances.remove(id);
         else
             Singletons.Log.Debug("A data instance with ID " + id + " cannot be removed because it does not exist in the collection.");
     }
@@ -603,10 +619,9 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         if (value != null)
         {
-            int index = _instances.indexOf(new DataValues(instanceID));
-            DataValues instance = _instances.get(index);
-            instance.AddDataPoint(dataPointName, value);
-            _instances.set(index, instance);
+        	DataValues instance = Get(instanceID);
+        	instance.AddDataPoint(dataPointName, value);
+        	_instances.put(instanceID, instance);
         }
     }
 
@@ -618,10 +633,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     public void UpdateDataPointName(String fromDataPointName, String toDataPointName)
     {
         for (DataValues instance : this)
-        {
             instance.UpdateDataPointName(fromDataPointName, toDataPointName);
-            UpdateInstance(instance);
-        }
     }
 
     /** Replaces an existing data instance with the specified data instance. If the data instance does not exist in this collection, the specified instance is added.
@@ -630,17 +642,12 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public void UpdateInstance(DataValues instance)
     {
-        int index = _instances.indexOf(instance);
-
-        if (index == -1)
-            _instances.add(instance);
-        else
-            _instances.set(index, instance);
+    	_instances.put(instance.GetID(), instance);
     }
 
     public Iterator<DataValues> iterator()
     {
-        return _instances.iterator();
+        return _instances.values().iterator();
     }
 
     @Override
@@ -648,7 +655,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         StringBuilder builder = new StringBuilder();
 
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
             builder.append(instance.toString() + "\n");
 
         return builder.toString();
@@ -663,7 +670,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         FileUtilities.WriteTextToFile(filePath, "");
 
-        for (DataValues instance : _instances)
+        for (DataValues instance : this)
             FileUtilities.AppendTextToFile(filePath, instance.toString() + "\n");
 
         FileUtilities.AppendTextToFile(filePath, END_OF_FILE_MARKER);
@@ -723,9 +730,11 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         StringBuilder builder = new StringBuilder();
 
-        for (int i = 0; i<5 && i< Size(); i++)
+        ArrayList<String> instanceIDs = GetIDs();
+        
+        for (int i = 0; i<3; i++)
         {
-            DataValues instance = Get(i);
+        	DataValues instance = Get(instanceIDs.get(i));
             builder.append(instance.toShortString() + "\n");
         }
 

@@ -61,17 +61,17 @@ public class ClassificationAlgorithm
         if (trainData.Size() == 0 || testData.Size() == 0)
             throw new Exception("No predictions can be made because the training and/or test set have no data");
 
-        // For any data point that is in the training set but not the test set, add it to the test set and specify that the values are missing
-        for (String dataPoint : ListUtilities.RemoveAll(trainData.GetDataPointNames(), testData.GetDataPointNames()))
+        Singletons.Log.Debug("For any data point that is in the training set but not the test set, add it to the test set and specify that the values are missing");
+        for (String dataPoint : ListUtilities.GetDifference(trainData.GetDataPointNames(), testData.GetDataPointNames()))
             for (String testInstanceID : testData.GetIDs())
                 testData.Add(dataPoint, testInstanceID, Settings.MISSING_VALUE_STRING);
 
-        // For any data point that is in the test set but not the training set, add it to the training set and specify that the values are missing
-        for (String dataPoint : ListUtilities.RemoveAll(testData.GetDataPointNames(), trainData.GetDataPointNames()))
+        Singletons.Log.Debug("For any data point that is in the test set but not the training set, add it to the training set and specify that the values are missing");
+        for (String dataPoint : ListUtilities.GetDifference(testData.GetDataPointNames(), trainData.GetDataPointNames()))
             for (String trainInstanceID : trainData.GetIDs())
                 trainData.Add(dataPoint, trainInstanceID, Settings.MISSING_VALUE_STRING);
 
-        // Do a sanity check to make sure that no instances overlap between the training and test sets
+        Singletons.Log.Debug("Do a sanity check to make sure that no instances overlap between the training and test sets");
         if (ListUtilities.Intersect(trainData.GetIDs(), testData.GetIDs()).size() > 0)
         {
             String errorMessage = "The training and test sets overlap. ";
@@ -87,10 +87,11 @@ public class ClassificationAlgorithm
 
         try
         {
-            // Execute the learning task
+        	Singletons.Log.Debug("Execute the learning task");
             LearnerConfig learnerConfig = Settings.LearnerConfigMap.get(LearnerKey);
             String commandTemplate = learnerConfig.CommandTemplate.replace("{Settings.MAIN_DIR}", Settings.MAIN_DIR);
 
+            Singletons.Log.Debug("Begin train and test");
             return learnerConfig.MachineLearner.TrainTest(commandTemplate, AlgorithmParameters, trainData, testData);
         }
         catch (Exception ex)

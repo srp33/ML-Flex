@@ -62,7 +62,7 @@ public abstract class AbstractDataProcessor
 
         Singletons.Log.Debug("Saving transformed instances for " + GetDescription());
         transformedInstances.SerializeToFile(GetDataFilePath());
-        DataInstanceCollection.DeserializeFromFile(GetDataFilePath()); // This verifies that you can read the file after writing it
+        //DataInstanceCollection.DeserializeFromFile(GetDataFilePath()); // This verifies that you can read the file after writing it
 
         return Boolean.TRUE;
     }

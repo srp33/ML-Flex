@@ -58,7 +58,7 @@ public class MiscUtilities
      */
     public static String FormatName(String name)
     {
-        return name.replace("/", "_forward_").replace(" ", "_space_").replace("*", "_star_").replace("-", "_hyphen_");
+        return name.replace("/", "_forward_").replace(" ", "_space_").replace("*", "_star_").replace("-", "_hyphen_").replace("'", "_apostraphe_").replace("\"", "_doublequote");
     }
 
     /** Some external libraries do not work well with special characters. After a name has been formatted, this method changes the characters back to the original characters.
@@ -83,7 +83,7 @@ public class MiscUtilities
      */
     public static String UnformatName(String name)
     {
-        return name.replace("_forward_", "/").replace("_space_", " ").replace("_star_", "*").replace("_hyphen_", "-");
+        return name.replace("_forward_", "/").replace("_space_", " ").replace("_star_", "*").replace("_hyphen_", "-").replace("_apostraphe_", "'").replace("_doublequote_", "\"");
     }
 
     /** Indicates the IP address of the machine where this software is being run

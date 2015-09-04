@@ -91,16 +91,16 @@ public class InstanceVault
             Singletons.Log.Debug("Reconciling dependent variable values");
 
             // Finds any instances for which there is class information but no independent variables and vice versa
-            ArrayList<String> independentVariableInstancesWithNoDependentVariable = ListUtilities.RemoveAll(new ArrayList<String>(independentVariableDataInstanceIDs), RawDependentVariableInstances.GetIDs());
-            ArrayList<String> dependentVariableInstancesWithNoIndependentVariable = ListUtilities.RemoveAll(RawDependentVariableInstances.GetIDs(), new ArrayList<String>(independentVariableDataInstanceIDs));
+            ArrayList<String> independentVariableInstancesWithNoDependentVariable = ListUtilities.GetDifference(new ArrayList<String>(independentVariableDataInstanceIDs), RawDependentVariableInstances.GetIDs());
+            ArrayList<String> dependentVariableInstancesWithNoIndependentVariable = ListUtilities.GetDifference(RawDependentVariableInstances.GetIDs(), new ArrayList<String>(independentVariableDataInstanceIDs));
 
-            // Remove the instances identified above
+			// Remove the instances identified above
             for (AbstractDataProcessor processor : Singletons.ProcessorVault.IndependentVariableDataProcessors)
                 if (_processorInstancesMap.containsKey(processor))
                     _processorInstancesMap.get(processor).RemoveInstances(independentVariableInstancesWithNoDependentVariable);
 
             RawDependentVariableInstances.RemoveInstances(dependentVariableInstancesWithNoIndependentVariable);
-
+			
             Singletons.Log.Debug("Transforming dependent variable values");
             TransformDependentVariableInstances();
         }

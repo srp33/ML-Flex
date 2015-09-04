@@ -69,7 +69,8 @@ public class ArffDataProcessor extends AbstractDataProcessor
         ArrayList<String> fileLines = FileUtilities.ReadLinesFromFile(_filePath, "%");
 
         ArrayList<String> metaRows = ListUtilities.GetValuesStartingWith(fileLines, "@");
-        ArrayList<String> dataRows = ListUtilities.RemoveAll(fileLines, metaRows);
+        //ArrayList<String> dataRows = ListUtilities.RemoveAll(fileLines, metaRows);
+        ArrayList<String> dataRows = ListUtilities.GetValuesNotStartingWith(fileLines, "@");
         metaRows = ListUtilities.Replace(metaRows, "\t", " ");
 
         if (dataRows.size() == 0)
@@ -79,7 +80,6 @@ public class ArffDataProcessor extends AbstractDataProcessor
         int idIndex = ListUtilities.ToLowerCase(attributeNames).indexOf("id");
 
         for (int i=0; i<dataRows.size(); i++) {
-            System.out.println(i);
             overallInstanceCount++;
 
             ArrayList<String> dataRowItems = ListUtilities.CreateStringList(dataRows.get(i).trim().split(","));
@@ -89,8 +89,6 @@ public class ArffDataProcessor extends AbstractDataProcessor
                 if (j != idIndex)
                     SaveRawDataPoint(attributeNames.get(j), instanceID, dataRowItems.get(j));
         }
-System.out.println("testing 000");
-System.exit(0);
     }
 
     /** Parses attribute names from the metadata rows in an ARFF file.
@@ -106,8 +104,10 @@ System.exit(0);
 
         for (String metaRow : metaRows)
         {
-            ArrayList<String> metaRowItems = ListUtilities.CreateStringList(metaRow.split(" "));
-            metaRowItems = ListUtilities.RemoveAll(metaRowItems, " ");
+            ArrayList<String> metaRowItems = new ArrayList<String>();
+            for (String item : ListUtilities.CreateStringList(metaRow.split(" ")))
+            	if (item != " ")
+            		metaRowItems.add(item);
 
             String descriptor = metaRowItems.get(0).toLowerCase();
 

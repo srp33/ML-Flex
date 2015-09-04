@@ -23,7 +23,6 @@ package mlflex.core;
 
 import mlflex.dataprocessors.AbstractDataProcessor;
 import mlflex.dataprocessors.DependentVariableDataProcessor;
-import mlflex.dataprocessors.AbstractMetadataProcessor;
 import mlflex.dataprocessors.AggregateDataProcessor;
 import mlflex.helper.MiscUtilities;
 
@@ -35,9 +34,7 @@ import java.util.ArrayList;
  */
 public class ProcessorVault
 {
-    /** This object contains an instance of any metadata processors that can be used in this experiment. */
-    public ArrayList<AbstractMetadataProcessor> MetadataProcessors = new ArrayList<AbstractMetadataProcessor>();
-    /** This object contains an instance of any (non-metadata) processor that can be used in this experiment. */
+    /** This object contains an instance of any processor that can be used in this experiment. */
     public ArrayList<AbstractDataProcessor> AllDataProcessors = new ArrayList<AbstractDataProcessor>();
     /** This object contains an instance of the dependent-variable (class) processor that is used in this experiment. */
     public DependentVariableDataProcessor DependentVariableDataProcessor = null;
@@ -50,17 +47,13 @@ public class ProcessorVault
      */
     public void Load() throws Exception
     {
-        // Instantiate metadata processors based on config information
-        for (String className : Singletons.Config.GetStringListConfigValue("META_DATA_PROCESSORS", ""))
-            MetadataProcessors.add((AbstractMetadataProcessor) ((Constructor) Class.forName(className).getConstructor()).newInstance());
-
         ArrayList<String> dataProcessorsConfigValues = Singletons.Config.GetMandatoryStringListConfigValue("DATA_PROCESSORS");
 
         // The AggregateDataProcessor must be the last one (if it is specified)
-        if (dataProcessorsConfigValues.contains(new AggregateDataProcessor().GetDescription()))
+        if (dataProcessorsConfigValues.contains(new AggregateDataProcessor().getClass().getName()))
         {
-            dataProcessorsConfigValues.remove(new AggregateDataProcessor().GetDescription());
-            dataProcessorsConfigValues.add(new AggregateDataProcessor().GetDescription());
+            dataProcessorsConfigValues.remove(new AggregateDataProcessor().getClass().getName());
+            dataProcessorsConfigValues.add(new AggregateDataProcessor().getClass().getName());
         }
 
         for (String classInstantiationText : dataProcessorsConfigValues)

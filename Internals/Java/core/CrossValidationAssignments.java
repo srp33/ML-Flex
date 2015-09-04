@@ -96,8 +96,9 @@ public class CrossValidationAssignments
         if (NumFolds == DependentVariableInstances.Size())
         {
             // Assign each instance to its own fold
+        	ArrayList<String> dependentVariableInstanceIDs = DependentVariableInstances.GetIDs();
             for (int i = 1; i <= DependentVariableInstances.Size(); i++)
-                Assignments.put(i, ListUtilities.CreateStringList(DependentVariableInstances.Get(i-1).GetID()));
+                Assignments.put(i, ListUtilities.CreateStringList(DependentVariableInstances.Get(dependentVariableInstanceIDs.get(i-1)).GetID()));
 
             return this;
         }
@@ -231,7 +232,8 @@ public class CrossValidationAssignments
      */
     public ArrayList<String> GetTrainIDs(int fold) throws Exception
     {
-        return FilterTrainIDs(ListUtilities.RemoveAll(GetAllIDs(), GetTestIDs(fold)));
+        //return FilterTrainIDs(ListUtilities.RemoveAll(GetAllIDs(), GetTestIDs(fold)));
+    	return FilterTrainIDs(ListUtilities.GetDifference(GetAllIDs(), GetTestIDs(fold)));
     }
 
     /** Returns a list of training instance IDs that have been excluded across all cross-validation folds.
@@ -245,7 +247,8 @@ public class CrossValidationAssignments
 
         for (int fold : GetAllFoldNumbers())
         {
-            ArrayList<String> trainIDs = ListUtilities.RemoveAll(GetAllIDs(), GetTestIDs(fold));
+            //ArrayList<String> trainIDs = ListUtilities.RemoveAll(GetAllIDs(), GetTestIDs(fold));
+        	ArrayList<String> trainIDs = ListUtilities.GetDifference(GetAllIDs(), GetTestIDs(fold));
             excluded.addAll(GetTrainIDsToExclude(trainIDs));
         }
 
@@ -259,7 +262,8 @@ public class CrossValidationAssignments
      */
     protected ArrayList<String> FilterTrainIDs(ArrayList<String> trainIDs) throws Exception
     {
-        return ListUtilities.RemoveAll(trainIDs, GetTrainIDsToExclude(trainIDs));
+        //return ListUtilities.RemoveAll(trainIDs, GetTrainIDsToExclude(trainIDs));
+        return ListUtilities.GetDifference(trainIDs, GetTrainIDsToExclude(trainIDs));
     }
 
     /** This method indicates which training instances, if any, should be excluded randomly from the analysis.

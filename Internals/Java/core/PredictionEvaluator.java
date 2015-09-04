@@ -162,10 +162,16 @@ public class PredictionEvaluator
             {
                 public Object call() throws Exception
                 {
+                	Singletons.Log.Debug("Make predictions - get outer features");
                     ArrayList<String> features = GetOuterFeatures();
+                    
+                	Singletons.Log.Debug("Make predictions - get training instances");
                     DataInstanceCollection trainData = Singletons.InstanceVault.GetCrossValidationAssignments().GetTrainInstances(Processor, OuterFold, features);
+                    
+                	Singletons.Log.Debug("Make predictions - get test instances");
                     DataInstanceCollection testData = Singletons.InstanceVault.GetCrossValidationAssignments().GetTestInstances(Processor, OuterFold, features);
 
+                	Singletons.Log.Debug("Make predictions - make and save predictions");
                     return MakeAndSavePredictions(features, trainData, testData, GetOuterSaveFilePath(), GetAlgorithmOutputFilePath(), GetOuterDescription());
                 }
             }));
@@ -176,25 +182,25 @@ public class PredictionEvaluator
 
     private Boolean MakeAndSavePredictions(ArrayList<String> features, DataInstanceCollection trainData, DataInstanceCollection testData, String saveFilePath, String modelFilePath, String description) throws Exception
     {
-        // See if we need to make predictions
+        Singletons.Log.Debug("See if we need to make predictions");
         if (!NeedToMakePredictions(features, trainData, testData, description))
             return Boolean.TRUE;
 
-        // Make the predictions
+        Singletons.Log.Debug("Make the predictions");
         ModelPredictions modelPredictions = ClassificationAlgorithm.TrainTest(trainData, testData, _dependentVariableInstances.Clone());
 
-        // Make sure the predictions are valid
+        Singletons.Log.Debug("Make sure the predictions are valid");
         if (!PredictionsAreValid(testData, modelPredictions, description))
             return Boolean.FALSE;
 
-        // Save the predictions to a file
+        Singletons.Log.Debug("Save the predictions to a file");
         modelPredictions.Predictions.SaveToFile(saveFilePath);
 
-        // Save the model/description about the predictions to a file
+        Singletons.Log.Debug("Save the model/description about the predictions to a file");
         if (modelFilePath != null && modelPredictions.Model.length() > 0)
             FileUtilities.WriteTextToFile(modelFilePath, modelPredictions.Model);
 
-        // Indicate whether everything worked properly
+        Singletons.Log.Debug("Indicate whether everything worked properly");
         return modelPredictions.Predictions.equals(Predictions.ReadFromFile(saveFilePath));
     }
 

@@ -81,17 +81,17 @@ public class WekaLearner extends AbstractMachineLearner
     @Override
     public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData) throws Exception
     {
-        // Create ARFF file for training data
+        Singletons.Log.Debug("Create ARFF file for training data");
         String trainingArffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, testData, true).CreateArffFile().GetArffFilePath();
 
-        // Create ARFF file for test data
+        Singletons.Log.Debug("Create ARFF file for test data");
         String testArffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), testData, trainData, true).CreateArffFile().GetArffFilePath();
 
-        // Replace tokens to indicate paths to input files
+        Singletons.Log.Debug("Replace tokens to indicate paths to input files");
         String command = commandTemplate.replace("{INPUT_TRAINING_FILE}", trainingArffFilePath);
         command = command.replace("{INPUT_TEST_FILE}", testArffFilePath);
 
-        // Parse the classifier information and paste it together in proper order
+        Singletons.Log.Debug("Parse the classifier information and paste it together in proper order");
         String classifier = algorithmParameters.get(0);
         String additionalParameters = "";
         if (classifier.contains(" --"))
@@ -103,32 +103,32 @@ public class WekaLearner extends AbstractMachineLearner
 
         try
         {
-            // Invoke Weka at the command line
+        	Singletons.Log.Debug("Invoke Weka at the command line");
             HashMap<String, String> results = CommandLineClient.RunAnalysis(command);
 
-            // Delete ARFF files
+            Singletons.Log.Debug("Delete ARFF files");
             FileUtilities.DeleteFile(trainingArffFilePath);
             FileUtilities.DeleteFile(testArffFilePath);
 
-            // Retrieve output
+            Singletons.Log.Debug("Retrieve output");
             String output = CommandLineClient.GetCommandResult(results, CommandLineClient.STANDARD_OUT_KEY);
 
             ArrayList<String> rawOutputLines = ListUtilities.CreateStringList(output.split("\n"));
             ArrayList<String> outputLines = new ArrayList<String>();
 
-            // Build predictions by parsing through output
+            Singletons.Log.Debug("Build predictions by parsing through output");
             ArrayList<Prediction> predictions = new ArrayList<Prediction>();
 
-            // Remove header lines
+            Singletons.Log.Debug("Remove header lines");
             for (String line : rawOutputLines)
                 if ((outputLines.size() > 0 || line.contains("inst#     actual  predicted error distribution")) && line.length() > 0)
                     outputLines.add(line);
             outputLines.remove(0);
 
-            // Sort the test instance IDs because they will be returned from Weka in sorted order
+            Singletons.Log.Debug("Sort the test instance IDs because they will be returned from Weka in sorted order");
             ArrayList<String> testInstanceIDs = ListUtilities.SortStringList(testData.GetIDs());
 
-            // Parse through the Weka custom output
+            Singletons.Log.Debug("Parse through the Weka custom output");
             for (int i=0; i<outputLines.size(); i++)
             {
                 ArrayList<String> lineItems = ListUtilities.CreateStringList(outputLines.get(i).trim().split("\\s+"));
@@ -286,16 +286,22 @@ public class WekaLearner extends AbstractMachineLearner
      */
     public CustomWekaEvaluation GetWekaEvaluation(Predictions predictions) throws Exception
     {
+    	Singletons.Log.Debug("Get transformed dependent variable instances");
         DataInstanceCollection dataInstances = Singletons.InstanceVault.TransformedDependentVariableInstances.Get(predictions.GetInstanceIDs()).Clone();
         dataInstances.RemoveDataPointName(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName);
 
+    	Singletons.Log.Debug("Get Weka data instances");
         Instances wekaInstances = GetInstances(dataInstances);
 
+    	Singletons.Log.Debug("Create custom weka evaluation object");
         CustomWekaEvaluation evaluation = new CustomWekaEvaluation(wekaInstances);
 
+    	Singletons.Log.Debug("Add instance predictions");
+    	
+    	ArrayList<String> instanceIDs = dataInstances.GetIDs();
         for (int i=0; i<dataInstances.Size(); i++)
         {
-            DataValues dataInstance = dataInstances.Get(i);
+            DataValues dataInstance = dataInstances.Get(instanceIDs.get(i));
 
             if (predictions.HasPrediction(dataInstance.GetID()))
                 evaluation.AddInstancePrediction(wekaInstances.instance(i), predictions.Get(dataInstance.GetID()));

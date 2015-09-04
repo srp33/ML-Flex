@@ -90,20 +90,6 @@ public class DataValues implements Iterable<String>, Comparable
             AddDataPoint(name, value.equals(oneOption) ? "1" : "0");
     }
 
-    /** Adds a binary data point to this instance. Multiple values can be specified, and if any of them are the same as the "one option" value, the data point is marked as 1; otherwise, it is marked as 0.
-     *
-     * @param name Data point name
-     * @param values Data point values
-     * @param oneOption One option
-     */
-    public void AddBinaryDataPoint(String name, ArrayList<String> values, String oneOption)
-    {
-        if (values == null)
-            AddDataPoint(name, Settings.MISSING_VALUE_STRING);
-
-        AddDataPoint(name, values.contains(oneOption) ? "1" : "0");
-    }
-
     /** Removes all data point values.
      *
      * @return This instance without any data point values specified

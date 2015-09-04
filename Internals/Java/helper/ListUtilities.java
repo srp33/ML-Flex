@@ -341,7 +341,8 @@ public class ListUtilities
      */
     public static ArrayList<String> GetUniqueValues(ArrayList<String> values)
     {
-        return new ArrayList<String>(new HashSet<String>(values));
+        return new ArrayList<String>(new LinkedHashSet<String>(values));
+        //return new ArrayList<String>(new LinkedHashSet<String>(values));
     }
 
     /** Returns a random subset of values from the specified list.
@@ -356,33 +357,33 @@ public class ListUtilities
         return Subset(Shuffle(list, random), 0, MathUtilities.Min(numValues, list.size()));
     }
 
-    /** Convenience method to remove all instances of a given String value from a list.
-     *
-     * @param list List of String values
-     * @param itemToRemove Item to be removed
-     * @return New list with items removed
-     */
-    public static ArrayList<String> RemoveAll(ArrayList<String> list, String itemToRemove)
-    {
-        return RemoveAll(list, ListUtilities.CreateStringList(itemToRemove));
-    }
+//    /** Convenience method to remove all instances of a given String value from a list.
+//     *
+//     * @param list List of String values
+//     * @param itemToRemove Item to be removed
+//     * @return New list with items removed
+//     */
+//    public static ArrayList<String> RemoveAll(ArrayList<String> list, String itemToRemove)
+//    {
+//        return RemoveAll(list, ListUtilities.CreateStringList(itemToRemove));
+//    }
 
-    /** Convenience method to remove all instances of given String values from a list.
-     *
-     * @param list List of String values
-     * @param itemsToRemove Items to be removed
-     * @return New list with items removed
-     */
-    public static ArrayList<String> RemoveAll(ArrayList<String> list, ArrayList<String> itemsToRemove)
-    {
-        if (itemsToRemove.size() == 0)
-            return list;
-
-        ArrayList<String> newList = new ArrayList<String>(list);
-        newList.removeAll(itemsToRemove);
-
-        return newList;
-    }
+//    /** Convenience method to remove all instances of given String values from a list.
+//     *
+//     * @param list List of String values
+//     * @param itemsToRemove Items to be removed
+//     * @return New list with items removed
+//     */
+//    public static ArrayList<String> RemoveAll(ArrayList<String> list, ArrayList<String> itemsToRemove)
+//    {
+//        if (itemsToRemove.size() == 0)
+//            return list;
+//
+//        ArrayList<String> newList = new ArrayList<String>(list);
+//        newList.removeAll(itemsToRemove);
+//
+//        return newList;
+//    }
 
     /** This method returns unique String values that are in the first list but not in the second list (set difference).
      *
@@ -438,6 +439,23 @@ public class ListUtilities
 
         return results;
     }
+    
+    /** Identifies all values in a String list that do not start with a given String value.
+    *
+    * @param values List of values to be tested
+    * @param pattern String value to be matched
+    * @return List subset
+    */
+   public static ArrayList<String> GetValuesNotStartingWith(ArrayList<String> values, String pattern)
+   {
+       ArrayList<String> results = new ArrayList<String>();
+
+       for (String value : values)
+           if (!value.startsWith(pattern))
+               results.add(value);
+
+       return results;
+   }
 
     /** Gets a subset of a String array, starting with the specified index position.
      *
@@ -874,19 +892,22 @@ public class ListUtilities
      * @param list List to sort
      * @return Sorted list
      */
-    public static ArrayList<String> SortStringList(ArrayList<String> list)
+    @SuppressWarnings("unchecked")
+	public static ArrayList<String> SortStringList(ArrayList<String> list)
     {
-        ArrayList<NumericString> numericStringList = new ArrayList<NumericString>();
-        for (String item : list)
-            numericStringList.add(new NumericString(item));
-
-        Collections.sort(numericStringList);
-
-        ArrayList<String> sortedList = new ArrayList<String>();
-        for (NumericString item : numericStringList)
-            sortedList.add(item.toString());
-
-        return sortedList;
+//        ArrayList<NumericString> numericStringList = new ArrayList<NumericString>();
+//        for (String item : list)
+//            numericStringList.add(new NumericString(item));
+//
+//        Collections.sort(numericStringList);
+//
+//        ArrayList<String> sortedList = new ArrayList<String>();
+//        for (NumericString item : numericStringList)
+//            sortedList.add(item.toString());
+//
+//        return sortedList;
+    	
+    	return (ArrayList<String>)Sort(list);
     }
 
     /** This method inserts a String value at the specified index into a list of String objects.

@@ -52,6 +52,7 @@ public class AggregateDataProcessor extends AbstractDataProcessor
         DataInstanceCollection instances = new DataInstanceCollection();
 
         for (AbstractDataProcessor processor : Singletons.ProcessorVault.IndependentVariableDataProcessors)
+        {
             if (!(processor instanceof AggregateDataProcessor))
             {
                 DataInstanceCollection processorInstances = Singletons.InstanceVault.GetInstancesForAnalysis(processor);
@@ -62,7 +63,8 @@ public class AggregateDataProcessor extends AbstractDataProcessor
                     instances.Add(processorInstances);
                 }
             }
-
+        }
+        
         return instances;
     }
 }

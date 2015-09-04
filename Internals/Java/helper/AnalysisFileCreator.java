@@ -97,9 +97,13 @@ public class AnalysisFileCreator
         StringBuilder output = new StringBuilder();
         output.append("@relation thedata\n\n");
 
+        Singletons.Log.Debug("Sorting data point names");
         ArrayList<String> dataPointNames = ListUtilities.SortStringList(_dataInstances.GetDataPointNames());
+
+        Singletons.Log.Debug("Sorting instance IDs");
         ArrayList<String> instanceIDs = ListUtilities.SortStringList(_dataInstances.GetIDs());
 
+        Singletons.Log.Debug("Appending ARFF attributes for independent variables");
         for (String dataPointName : dataPointNames)
         {
             HashSet<String> uniqueValues = new HashSet<String>(_dataInstances.GetUniqueValues(dataPointName));
@@ -110,12 +114,13 @@ public class AnalysisFileCreator
             AppendArffAttribute(new ArrayList<String>(uniqueValues), dataPointName, output);
         }
 
+        Singletons.Log.Debug("Appending ARFF attributes for dependent variable");
         if (_includeDependentVariable)
             AppendArffAttribute(Singletons.InstanceVault.TransformedDependentVariableOptions, Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName, output);
 
         output.append("\n@data");
 
-
+        Singletons.Log.Debug("Creating ARFF output text object");
         for (String instanceID : instanceIDs)
         {
             DataValues instance = _dataInstances.Get(instanceID);
@@ -125,6 +130,7 @@ public class AnalysisFileCreator
                 output.append("," + FormatOutputValue(GetDependentVariableValue(instanceID)));
         }
 
+        Singletons.Log.Debug("Saving ARFF output to file");
         FileUtilities.WriteTextToFile(outFilePath, output.toString());
 
         return this;

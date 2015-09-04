@@ -72,12 +72,13 @@ public class C5Learner extends AbstractMachineLearner
         ArrayList<Prediction> predictions = new ArrayList<Prediction>();
 
         // Parse through the output and generate a prediction object for each test instance
+        ArrayList<String> testDataIDs = testData.GetIDs();
         for (int i = 0; i < outputLines.size(); i++)
         {
             String prediction = outputLines.get(i).split("\\s+")[3];
             double confidence = Double.parseDouble(outputLines.get(i).split("\\s+")[4].replace("[", "").replace("]", ""));
 
-            DataValues instance = testData.Get(i);
+            DataValues instance = testData.Get(testDataIDs.get(i));
 
             ArrayList<String> dependentVariableOptions = Singletons.InstanceVault.TransformedDependentVariableOptions;
             ArrayList<Double> classProbabilities = new ArrayList<Double>();

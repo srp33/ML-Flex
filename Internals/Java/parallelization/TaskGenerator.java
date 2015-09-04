@@ -23,7 +23,6 @@ package mlflex.parallelization;
 
 import mlflex.core.*;
 import mlflex.dataprocessors.AbstractDataProcessor;
-import mlflex.dataprocessors.AbstractMetadataProcessor;
 import mlflex.ensemblelearners.AbstractEnsembleLearner;
 import mlflex.evaluation.ClassificationResultsSaver;
 import mlflex.evaluation.FeatureSelectionResultsSaver;
@@ -99,28 +98,6 @@ public class TaskGenerator
         }
 
         return tasks;
-    }
-
-    /** Constructs tasks for processing raw metadata.
-     *
-     * @return Executable tasks
-     */
-    public static ArrayList<LockedCallable> GetProcessRawMetadataTasks()
-    {
-        ArrayList<LockedCallable> callables = new ArrayList<LockedCallable>();
-
-        for (final AbstractMetadataProcessor processor : Singletons.ProcessorVault.MetadataProcessors)
-        {
-            callables.add(new LockedCallable("Metadata/" + processor.GetDescription(), "Save metadata for " + processor.GetDescription(), new Callable<Object>()
-            {
-                public Object call() throws Exception
-                {
-                    return processor.Save();
-                }
-            }));
-        }
-
-        return callables;
     }
 
     /** Constructs tasks for processing raw analysis data.

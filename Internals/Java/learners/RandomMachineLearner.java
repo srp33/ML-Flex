@@ -55,10 +55,11 @@ public class RandomMachineLearner extends AbstractMachineLearner
         ArrayList<String> randomTestDataDependentVariableValues = ListUtilities.Shuffle(testDependentVariableInstances.GetDataPointValues(dependentVariableName).GetAllValues(), new Random(GenerateRandomSeed(trainingData)));
 
         ArrayList<Prediction> predictions = new ArrayList<Prediction>();
-
+        
+        ArrayList<String> testDataIDs = testData.GetIDs();
         for (int i=0; i<testData.Size(); i++)
         {
-            String instanceID = testData.Get(i).GetID();
+            String instanceID = testDataIDs.get(i);
             String predictedClass = randomTestDataDependentVariableValues.get(i);
             String actualClass = testDependentVariableInstances.Get(instanceID).GetDataPointValue(dependentVariableName);
 

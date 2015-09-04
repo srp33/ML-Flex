@@ -66,13 +66,17 @@ public class ClassificationResultsSaver
      */
     public void SaveClassificationResults() throws Exception
     {
-        // Save results for outer fold(s)
+        Singletons.Log.Debug("Save classification results for outer fold(s)");
         SaveClassificationResultValues(_modelSelector.GetResultsFilePaths(true, false), true);
 
         // Is this a training/Action experiment rather than cross-validation? If so, save prediction results for training data.
         if (_evaluateInner && Settings.IsTrainTestExperiment())
+        {
+        	Singletons.Log.Debug("Save classification results for inner fold(s)");
             SaveClassificationResultValues(_modelSelector.GetResultsFilePaths(true, true), false);
+        }
 
+        Singletons.Log.Debug("Save algorithm output summary");
         SaveAlgorithmOutputSummary(_modelSelector.GetResultsFilePaths(true, false).ALGORITHM_OUTPUT);
     }
 
@@ -84,20 +88,20 @@ public class ClassificationResultsSaver
      */
     private void SaveClassificationResultValues(ClassificationResultsFilePaths filePaths, boolean outer) throws Exception
     {
-        // Assign variables that depend on whether results are being saved for inner or outer cross-validation folds
+        Singletons.Log.Debug("Assign variables that depend on whether results are being saved for inner or outer cross-validation folds");
         Predictions predictions = outer ? _modelSelector.GetBestOuterPredictionsAllFolds() : _modelSelector.GetBestInnerPredictions(1);
 
-        // Calculate and save performance metrics
+        Singletons.Log.Debug("Calculate and save performance metrics");
         SavePerformanceMetrics(new PredictionResults(predictions), filePaths.PERFORMANCE_METRICS, PERFORMANCE_METRICS_COMMENT);
 
-        // Calculate and save per-class metrics
+        Singletons.Log.Debug("Calculate and save per-class metrics");
         SavePerClassMetrics(new PredictionResults(predictions), filePaths.PER_CLASS_METRICS, PER_CLASS_METRICS_COMMENT);
         SaveConfusionMatrix(new PredictionResults(predictions), filePaths.CONFUSION_MATRIX, CONFUSION_MATRIX_COMMENT);
 
-        // Save results that indicate how performance varied per number of features included in models
+        Singletons.Log.Debug("Save results that indicate how performance varied per number of features included in models");
         SaveNumFeaturesResults(filePaths.NUM_FEATURES, _modelSelector, outer, NUM_FEATURES_COMMENT);
 
-        // Save file that describes predictions that have been made, including class probabilities when applicable
+        Singletons.Log.Debug("Save file that describes predictions that have been made, including class probabilities when applicable");
         SavePredictionsFile(predictions, filePaths.PREDICTIONS, PREDICTIONS_COMMENT);
     }
 
@@ -117,10 +121,15 @@ public class ClassificationResultsSaver
 
         // Basic definitions for many of the evaluation metrics can be found here: http://weka.sourceforge.net/doc/weka/classifiers/Evaluation.html
 
+        Singletons.Log.Debug("Save performance metrics - step 1");
         nameValueResults.add(NameValuePair.Create("Weighted average AUC", results.GetWekaEvaluation().weightedAreaUnderROC()));
+        Singletons.Log.Debug("Save performance metrics - step 1.2");
         nameValueResults.add(NameValuePair.Create("Weighted average F-Measure", results.GetWekaEvaluation().weightedFMeasure()));
+        Singletons.Log.Debug("Save performance metrics - step 1.3");
         nameValueResults.add(NameValuePair.Create("Weighted average true positive rate", results.GetWekaEvaluation().weightedTruePositiveRate()));
+        Singletons.Log.Debug("Save performance metrics - step 1.4");
         nameValueResults.add(NameValuePair.Create("Weighted average false positive rate", results.GetWekaEvaluation().weightedFalsePositiveRate()));
+        Singletons.Log.Debug("Save performance metrics - step 1.5");
         nameValueResults.add(NameValuePair.Create("Weighted average sensitivity (recall)", results.GetWekaEvaluation().weightedRecall()));
 
         // Not sure what the following should mean because you don't know which class is 'positive' and which is negative' and because you may have more than two classes. These aren't displayed in Weka output, possible for same reason.
@@ -129,6 +138,7 @@ public class ClassificationResultsSaver
         // This one is displayed in Weka, but I'm not sure what they mean by it
         //nameValueResults.add(NameValuePair.Create("Weighted Specificity / Precision", results.GetWekaEvaluation().weightedPrecision()));
 
+        Singletons.Log.Debug("Save performance metrics - step 2");
         nameValueResults.add(NameValuePair.Create("Total number correct", results.GetTotalNumberCorrect()));
         nameValueResults.add(NameValuePair.Create("Total number incorrect", results.GetTotalNumberIncorrect()));
         nameValueResults.add(NameValuePair.Create("Accuracy", results.GetAccuracy()));
@@ -144,11 +154,13 @@ public class ClassificationResultsSaver
         nameValueResults.add(NameValuePair.Create("Root relative squared error (%)", results.GetWekaEvaluation().rootRelativeSquaredError()));
 
         // These copy what is output in Weka. I need to find a reference to what they actually mean
+        Singletons.Log.Debug("Save performance metrics - step 3");
         nameValueResults.add(NameValuePair.Create("Kononenko & Bratko information score (bits)", results.GetWekaEvaluation().KBInformation()));
         nameValueResults.add(NameValuePair.Create("Kononenko & Bratko information score (bits / instance)", results.GetWekaEvaluation().KBMeanInformation()));
         nameValueResults.add(NameValuePair.Create("Kononenko & Bratko relative information score (%)", results.GetWekaEvaluation().KBRelativeInformation()));
 
         // These copy what is output in Weka. I need to find a reference to what they actually mean
+        Singletons.Log.Debug("Save performance metrics - step 4");
         nameValueResults.add(NameValuePair.Create("Class complexity - order (bits)", results.GetWekaEvaluation().SFPriorEntropy()));
         nameValueResults.add(NameValuePair.Create("Class complexity - order (bits / instance)", results.GetWekaEvaluation().SFMeanPriorEntropy()));
         nameValueResults.add(NameValuePair.Create("Class complexity - scheme (bits)", results.GetWekaEvaluation().SFSchemeEntropy()));
@@ -162,6 +174,7 @@ public class ClassificationResultsSaver
         nameValueResults.add(0, new NameValuePair("Metric", "Result"));
 
         // Save the metrics to a file
+        Singletons.Log.Debug("Save performance metrics - step 5");
         ResultsFileUtilities.AppendMatrixColumn(nameValueResults, outFilePath, headerComment);
     }
 
@@ -271,21 +284,24 @@ public class ClassificationResultsSaver
      */
     private static void SavePredictionsFile(Predictions predictions, String outFilePath, String headerComment) throws Exception
     {
+    	Singletons.Log.Debug("Beginning to save predictions");
         ArrayList<String> dependentVariableClasses = Singletons.InstanceVault.TransformedDependentVariableOptions;
         ArrayList<ArrayList<String>> outRows = new ArrayList<ArrayList<String>>();
 
-        // Format the file header
+        Singletons.Log.Debug("Format the predictions file header");
         ArrayList<String> headerVals = ListUtilities.CreateStringList("Instance_ID", "Dependent_Variable_Value", "Prediction");
         for (String x : dependentVariableClasses)
             headerVals.add(x + "_Probability");
 
-        // Include the raw dependent variable when relevant
+        Singletons.Log.Debug("Include the raw dependent variable when relevant");
         if (Singletons.InstanceVault.RawDependentVariableValuesAreContinuous())
             headerVals.add(1, "Raw_Dependent_Variable_Value");
 
         outRows.add(headerVals);
 
-        // Build output for each prediction that has been made
+        boolean rawDependentVariablesAreContinous = Singletons.InstanceVault.RawDependentVariableValuesAreContinuous();
+
+        Singletons.Log.Debug("Build output for each prediction that has been made");
         for (String instanceID : predictions.GetInstanceIDs())
         {
             Prediction prediction = predictions.Get(instanceID);
@@ -296,13 +312,13 @@ public class ClassificationResultsSaver
                 predictionVals.add(String.valueOf(prediction.ClassProbabilities.get(i)));
 
             // Include the raw dependent variable value when relevant
-            if (Singletons.InstanceVault.RawDependentVariableValuesAreContinuous())
+            if (rawDependentVariablesAreContinous)
                 predictionVals.add(1, Singletons.InstanceVault.GetRawDependentVariableValue(prediction.InstanceID));
 
             outRows.add(predictionVals);
         }
 
-        // Write the information to a file
+        Singletons.Log.Debug("Write the prediction information to a file");
         FileUtilities.WriteLinesToFile(outFilePath, outRows, headerComment);
     }
 

@@ -79,19 +79,43 @@ public class RLearner extends AbstractMachineLearner
         ArrayList<String> headerItems = ListUtilities.CreateStringList(outputLines.remove(0).split("\t"));
 
         ArrayList<Prediction> predictions = new ArrayList<Prediction>();
+        
+Singletons.Log.Debug("outputText:");
+Singletons.Log.Debug(outputText);
+        
+Singletons.Log.Debug("headerItems:");
+Singletons.Log.Debug(headerItems);
 
-        for (int i=0; i<testData.Size(); i++)
+        for (DataValues testInstance : testData)
         {
-            DataValues testInstance = testData.Get(i);
-            ArrayList<String> outputItems = ListUtilities.CreateStringList(outputLines.get(i).split("\t"));
+            ArrayList<String> outputItems = ListUtilities.CreateStringList(outputLines.remove(0).split("\t"));
             String predictedClass = outputItems.get(0);
 
+Singletons.Log.Debug("outputItems:");
+Singletons.Log.Debug(outputItems);
+            
             ArrayList<Double> classProbabilities = new ArrayList<Double>();
             for (String dependentVariableValue : Singletons.InstanceVault.TransformedDependentVariableOptions)
+            {
+Singletons.Log.Debug(dependentVariableValue);
                 classProbabilities.add(Double.parseDouble(outputItems.get(headerItems.indexOf(dependentVariableValue))));
+            }
 
             predictions.add(new Prediction(testInstance.GetID(), Singletons.InstanceVault.GetTransformedDependentVariableValue(testInstance.GetID()), predictedClass, classProbabilities));
         }
+        
+//        for (int i=0; i<testData.Size(); i++)
+//        {
+//            DataValues testInstance = testData.Get(i);
+//            ArrayList<String> outputItems = ListUtilities.CreateStringList(outputLines.get(i).split("\t"));
+//            String predictedClass = outputItems.get(0);
+//
+//            ArrayList<Double> classProbabilities = new ArrayList<Double>();
+//            for (String dependentVariableValue : Singletons.InstanceVault.TransformedDependentVariableOptions)
+//                classProbabilities.add(Double.parseDouble(outputItems.get(headerItems.indexOf(dependentVariableValue))));
+//
+//            predictions.add(new Prediction(testInstance.GetID(), Singletons.InstanceVault.GetTransformedDependentVariableValue(testInstance.GetID()), predictedClass, classProbabilities));
+//        }
 
         return new Predictions(predictions);
     }

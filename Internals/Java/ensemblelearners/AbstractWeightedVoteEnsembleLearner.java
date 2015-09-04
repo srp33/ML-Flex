@@ -55,7 +55,7 @@ public abstract class AbstractWeightedVoteEnsembleLearner extends AbstractEnsemb
         ArrayList<Double> classWeights = new ArrayList<Double>();
         for (String x : classes)
             classWeights.add(0.0);
-
+        
         // Update the class weights based on the inner predictions
         for (EnsemblePredictionInfo info : combinedPredictionInfos.Infos)
             classWeights.set(classes.indexOf(info.OuterPrediction.Prediction), GetWeight(info));
