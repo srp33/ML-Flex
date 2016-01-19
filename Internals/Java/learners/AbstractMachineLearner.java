@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -24,7 +24,7 @@ package mlflex.learners;
 import mlflex.core.DataInstanceCollection;
 import mlflex.core.ModelPredictions;
 
-import java.util.ArrayList;
+import java.util.*;
 
 /** This class provides a template for classes that perform general machine-learning tasks. It can be overridden with custom classes that implement these tasks for new third-party packages or for custom implementation.
  * @author Stephen Piccolo
@@ -44,12 +44,6 @@ public abstract class AbstractMachineLearner
     public abstract ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception;
 
     /** This method is used by custom machine learner classes to perform classification.
-     *
-     *
-     *
-     *
-     *
-     *
      * @param commandTemplate
      * @param classificationParameters General parameter values that are used by the machine learner to perform classification. These parameters are usually stored in the ClassificationParameters.txt file in the Config directory.
      * @param trainingData Training data instances
@@ -57,5 +51,5 @@ public abstract class AbstractMachineLearner
      * @return Predictions for each test data instance
      * @throws Exception
      */
-    public abstract ModelPredictions TrainTest(String commandTemplate, ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception;
+    public abstract ModelPredictions TrainTest(String commandTemplate, ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData, ArrayList<String> features) throws Exception;
 }

@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -203,7 +203,7 @@ public class Predictions
 
         // Create the header
         header.addAll(ListUtilities.CreateStringList("Instance_ID", "Dependent_Variable_Value", "Prediction"));
-        for (String x : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String x : Singletons.InstanceVault.DependentVariableOptions)
             header.add(x + "_Probability");
 
         StringBuffer buffer = new StringBuffer();

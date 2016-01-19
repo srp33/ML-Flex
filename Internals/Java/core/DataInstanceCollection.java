@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -25,6 +25,7 @@ import mlflex.helper.*;
 import mlflex.parallelization.MultiThreadedTaskHandler;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,84 +36,22 @@ import java.util.TreeMap;
 /** This class is designed to store all data for a set of data instances. It provides methods that make it easier to create, retrieve, update, and delete data values for these instances.
  * @author Stephen Piccolo
  */
-public class DataInstanceCollection implements Iterable<DataValues>
+public class DataInstanceCollection implements Iterable<String>
 {
     /** This value is placed at the end of a file that contains a serialized version of this object. It's used to verify that the entire file was stored properly. */
     public static String END_OF_FILE_MARKER = "[EOF]";
-    //private ArrayList<DataValues> _instances;
-    //private TreeMap<String, DataValues> _instances;
-    private HashMap<String, DataValues> _instances;
+    private static String COMMA_REPLACE_STRING = "_comma_";
+    
+    private HashMap<String, HashMap<Integer, String>> _instances;
+    private HashMap<String, Integer> _valueIndexMap;
+    private int _intRefCount;
 
     /** Default constructor */
     public DataInstanceCollection()
     {
-//        _instances = new TreeMap<String, DataValues>();
-        _instances = new HashMap<String, DataValues>();
-    }
-
-    /** Constructor that starts with a single instance
-     *
-     * @param instance Data instance that will be the first data instance in this collection
-     */
-    public DataInstanceCollection(DataValues instance)
-    {
-    	this();
-        Add(instance);
-    }
-
-    /** Constructor that starts with a list of instances
-     *
-     * @param instances List of data instances that will be included initially in this collection
-     */
-    public DataInstanceCollection(ArrayList<DataValues> instances)
-    {
-    	this();
-    	
-        for (DataValues instance : instances)
-            Add(instance);
-    }
-
-    /** Constructor that starts with another collection of instances
-     *
-     * @param instances Collection of data instances that will be included initially in this collection
-     */
-    public DataInstanceCollection(DataInstanceCollection instances)
-    {
-        this();
-        
-        for (DataValues instance : instances)
-            Add(instance);
-    }
-
-    /** Adds a data instance to this collection
-     *
-     * @param instance Data instance to add
-     */
-    public void Add(DataValues instance)
-    {
-    	if (_instances.containsKey(instance.GetID()))
-    	{
-    		DataValues existing = _instances.get(instance.GetID());
-    		existing.AddDataPoints(instance);
-            _instances.put(instance.GetID(), existing);
-    	}
-    	else
-    	{
-            _instances.put(instance.GetID(), instance);
-    	}
-    }
-
-    /** Adds a collection of data instances to this collection.
-     *
-     * @param instances Collection of data instances to add
-     * @return This instance after the new instances have been added
-     */
-    public DataInstanceCollection Add(DataInstanceCollection instances)
-    {
-        for (DataValues instance : instances)
-            Add(instance);
-
-        return this;
+        _instances = new HashMap<String, HashMap<Integer, String>>();
+        _valueIndexMap  = new HashMap<String, Integer>();
+        _intRefCount = Integer.MIN_VALUE;
     }
 
     /** Adds a data value for a given instance to this collection.
@@ -123,88 +62,44 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public void Add(String dataPointName, String instanceID, String value)
     {
-        DataValues instance = new DataValues(instanceID);
+    	if (MiscUtilities.IsMissing(value))
+    		return;
+    	
+    	dataPointName = MiscUtilities.FormatName(dataPointName);
+    	
+    	Integer intDataPointName = GetIntRef(dataPointName);
 
-        if (this.Contains(instanceID))
-            instance = Get(instanceID);
+    	if (!_instances.containsKey(instanceID))
+    		_instances.put(instanceID, new HashMap<Integer, String>());
 
-        instance.AddDataPoint(dataPointName, value);
-        UpdateInstance(instance);
+    	_instances.get(instanceID).put(intDataPointName, value);
     }
-
+    
     /** For a given data point, this method converts values to zero or one, depending on whether they coincide with the specified value.
      *
      * @param dataPointName Data point name
      * @param oneOption Value that corresponds to a "1" binary value (other values will be converted to "0"
-     * @return Binarized value
      */
     public DataInstanceCollection BinarizeDataPoint(String dataPointName, String oneOption)
     {
-        for (DataValues instance : this)
-            instance.AddBinaryDataPoint(dataPointName, instance.GetDataPointValue(dataPointName), oneOption);
-
+        for (String instanceID : this)
+        	Add(dataPointName, instanceID, ConvertToBinary(GetDataPointValue(instanceID, GetIntRef(dataPointName)), oneOption));
+        
         return this;
     }
-
-    /** Removes all data values from this collection.
-     *
-     * @return This instance
-     */
-    public DataInstanceCollection ClearDataPoints()
-    {
-        for (DataValues instance : this)
-            UpdateInstance(instance.ClearDataPoints());
-
-        return this;
-    }
-
-    /** Creates a deep copy of this collection
-     *
-     * @return Deep copy of this instance
-     * @throws Exception
-     */
-    public DataInstanceCollection Clone() throws Exception
-    {
-        return Clone(null, null);
-    }
-
-    /** Creates a deep copy of this collection for the data instance IDs and data points specified
-     *
-     * @param ids Data instance IDs to include in copy
-     * @param dataPoints Data points to include in copy
-     * @return Deep copy of this instance
-     * @throws Exception
-     */
-    public DataInstanceCollection Clone(ArrayList<String> ids, ArrayList<String> dataPoints) throws Exception
-    {
-        DataInstanceCollection newInstances = new DataInstanceCollection();
-
-        ArrayList<String> instanceIDsToAdd = (ids == null) ? GetIDs() : ListUtilities.Intersect(GetIDs(), ids);
-        ArrayList<String> dataPointsToAdd = (dataPoints == null) ? GetDataPointNames() : ListUtilities.Intersect(GetDataPointNames(), dataPoints);
-
-        for (String instanceID : instanceIDsToAdd)
-        {
-            DataValues existingInstance = Get(instanceID);
-            DataValues newInstance = existingInstance.CopyStructure();
-
-            for (String dataPoint : dataPointsToAdd)
-                newInstance.AddDataPoint(dataPoint, existingInstance.GetDataPointValue(dataPoint));
-
-            newInstances.Add(newInstance);
-        }
-
-        return newInstances;
-    }
-
-    /** Indicates whether this collection contains the specified data instance.
-     *
-     * @param instance Query instance
-     * @return Whether the collection contains the instance
-     */
-    public boolean Contains(DataValues instance)
-    {
-        return _instances.containsKey(instance.GetID());
-    }
+    
+    /** Converts a data point to a binary value. If the value is the same as the "one option" value, it is marked as 1; otherwise, it is marked as 0.
+    *
+    * @param value Raw data point value
+    * @param oneOption One option
+    */
+   public String ConvertToBinary(String value, String oneOption)
+   {
+       if (MiscUtilities.IsMissing(value))
+           return Settings.MISSING_VALUE_STRING;
+       else
+           return value.equals(oneOption) ? "1" : "0";
+   }
 
     /** Indicates whether this collection contains the specified data instance.
      *
@@ -216,119 +111,107 @@ public class DataInstanceCollection implements Iterable<DataValues>
         return _instances.containsKey(instanceID);
     }
 
-    /** Creates a new collection that contains only data instances with the specified value for the specified data point.
-     *
-     * @param dataPointName Query data point name
-     * @param dataPointValue Query data point value
-     * @return New, filtered collection
-     */
-    public DataInstanceCollection FilterByDataPointValue(String dataPointName, String dataPointValue)
-    {
-        DataInstanceCollection matches = new DataInstanceCollection();
-
-        for (DataValues instance : this)
-        {
-            String instanceValue = instance.GetDataPointValue(dataPointName);
-
-            if (instanceValue.equals(dataPointValue))
-                matches.Add(instance.Clone());
-        }
-
-        return matches;
-    }
-
-    /** Formats all data point names.
-     *
-     */
-    public void FormatDataPointNames()
-    {
-        for (DataValues instance : this)
-            instance.FormatDataPointNames();
-    }
-
-//    /** Gets the data instance at the specified index.
+//    /** Gets the data instance for the specified data instance ID.
 //     *
-//     * @param index Query index
-//     * @return Data instance at the specified index
+//     * @param id Query data instance ID
+//     * @return Data instance for the specified data instance ID
 //     */
-//    public DataValues Get(int index)
+//    public HashMap<String, String> Get(String instanceID)
 //    {
-//        String instanceID = (String)_instances.keySet().toArray()[index];
-//        return _instances.get(instanceID);
+//    	HashMap<Integer, String> intInstance = _instances.get(instanceID);
+//    	HashMap<String, String> instance = new HashMap<String, String>();
+//
+//    	if (intInstance != null)
+//    	{
+//    		for (String dataPointName : _dataPointNames)
+//    			instance.put(dataPointName, intInstance.get(GetIntRef(dataPointName)));
+//    		
+//    		return instance;
+//    	}
+//
+//        return null;
 //    }
 
     /** Gets a collection of data instances that match the specified data instance IDs.
-     *
-     * @param ids Query data instance IDs
-     * @return Collection of data instances for specified data instance IDs
-     */
-    public DataInstanceCollection Get(ArrayList<String> ids)
-    {
-        DataInstanceCollection result = new DataInstanceCollection();
+    *
+    * @param ids Query data instance IDs
+    * @return Collection of data instances for specified data instance IDs
+    */
+   public DataInstanceCollection Get(ArrayList<String> instanceIDs)
+   {
+       DataInstanceCollection result = new DataInstanceCollection();
+       
+       result._valueIndexMap = _valueIndexMap;
+       
+       for (String instanceID : instanceIDs)
+			result._instances.put(instanceID, _instances.get(instanceID));
 
-        for (String id : ids)
-            if (Contains(id))
-                result.Add(Get(id));
-
-        return result;
-    }
-
-    /** Gets the data instance for the specified data instance ID.
-     *
-     * @param id Query data instance ID
-     * @return Data instance for the specified data instance ID
-     */
-    public DataValues Get(String id)
-    {
-    	if (Contains(id))
-    		return _instances.get(id);
-
-        return null;
-    }
-
+       return result;
+   }
+    
     /** Gets a list of all data point names across all data instances in the collection.
-     *
-     * @return List of all data point names
-     */
-    public ArrayList<String> GetDataPointNames()
-    {
-        HashSet<String> names = new HashSet<String>();
+    *
+    * @return List of all data point names
+    */
+   public ArrayList<String> GetDataPointNames()
+   {
+       return ListUtilities.SortStringList(new ArrayList<String>(_valueIndexMap.keySet()));
+   }
 
-        for (DataValues instance : this)
-            names.addAll(instance.GetDataPointNames());
+   /** Gets the data point value for specified instance and data point.
+   *
+   * @param instanceID Instance ID
+   * @param name Data point name
+   * @return Data point value
+   */
+   private String GetDataPointValue(String instanceID, Integer intDataPointName)
+   {
+	   HashMap<Integer, String> instance = _instances.get(instanceID);
+	   
+	   if (instance == null)
+		   return Settings.MISSING_VALUE_STRING;
+	   
+	   String value = instance.get(intDataPointName);
+	   
+	   if (value == null)
+		   return Settings.MISSING_VALUE_STRING;
+	   
+	   return value;
+   }
+   
+   public String GetDataPointValue(String instanceID, String dataPointName)
+   {
+	   return GetDataPointValue(instanceID, GetIntRef(dataPointName));
+   }
 
-        return new ArrayList<String>(names);
-    }
-
-    /** Gets a list of data point names that match the specified pattern, across all data instances in the collection.
-     *
-     * @param pattern Pattern to match
-     * @return List of matching data point names
-     */
-    public ArrayList<String> GetDataPointNamesMatching(String pattern)
-    {
-        ArrayList<String> matching = new ArrayList<String>();
-
-        for (String dataPointName : GetDataPointNames())
-            if (dataPointName.contains(pattern))
-                matching.add(dataPointName);
-
-        return matching;
-    }
-
+	/** Gets the data point values across all data instances for the specified data point.
+	 *
+	 * @param dataPointName Query data point name
+	 * @return Data values across all data instances
+	 */
+	public HashMap<String, String> GetDataPointValues(String dataPointName)
+	{
+	    HashMap<String, String> values = new HashMap<String, String>();
+	
+	    for (String instanceID : _instances.keySet())
+	        values.put(instanceID, GetDataPointValue(instanceID, dataPointName));
+	
+	    return values;
+	}
+    
     /** Gets the data point values across all data instances for the specified data point.
-     *
-     * @param dataPointName Query data point name
-     * @return Data values across all data instances
-     */
-    public DataValues GetDataPointValues(String dataPointName)
+    *
+    * @param dataPointName Query data point name
+    * @return Data values across all data instances
+    */
+    public ArrayList<String> GetDataPointValues(String instanceID, ArrayList<String> dataPointNames)
     {
-        DataValues values = new DataValues(dataPointName);
+       ArrayList<String> values = new ArrayList<String>();
 
-        for (DataValues instance : this)
-            values.AddDataPoint(instance.GetID(), instance.GetDataPointValue(dataPointName));
+       for (String dataPointName : dataPointNames)
+           values.add(GetDataPointValue(instanceID, dataPointName));
 
-        return values;
+       return values;
     }
 
     /** Gets a list of data instance IDs for the instances in this collection.
@@ -337,12 +220,22 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public ArrayList<String> GetIDs()
     {
-        ArrayList<String> ids = new ArrayList<String>();
+        return ListUtilities.SortStringList(new ArrayList<String>(_instances.keySet()));
+    }
+    
+    private Integer GetIntRef(String key)
+    {
+    	Integer intKey = _valueIndexMap.get(key);
 
-        for (DataValues instance : this)
-            ids.add(instance.GetID());
+    	if (intKey == null)
+    	{
+    		intKey = new Integer(_intRefCount);
+    		_intRefCount++;
 
-        return ids;
+    		_valueIndexMap.put(key, intKey);
+    	}
+    	
+    	return intKey;
     }
 
     /** Indicates the number of data point names across all data instances in this collection.
@@ -351,7 +244,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public int GetNumDataPoints()
     {
-        return GetDataPointNames().size();
+        return _valueIndexMap.size();
     }
 
     /** Indicates the proportion of missing values across all data instances in this collection.
@@ -362,8 +255,14 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         double numNotMissing = 0.0;
 
-        for (DataValues instance : this)
-            numNotMissing += instance.GetNumNotMissingValues();
+        for (String instanceID : _instances.keySet())
+        	for (String dataPointName : _valueIndexMap.keySet())
+        	{
+        		String value = GetDataPointValue(instanceID, dataPointName);
+        		
+        		if (!MiscUtilities.IsMissing(value))
+                    numNotMissing++;
+        	}
 
         double proportionMissing = 1 - (numNotMissing / ((double) Size() * (double) GetNumDataPoints()));
         return MathUtilities.Round(proportionMissing, 3);
@@ -378,137 +277,30 @@ public class DataInstanceCollection implements Iterable<DataValues>
     {
         HashSet<String> values = new HashSet<String>();
 
-        for (DataValues instance : this)
+        for (String instanceID : _instances.keySet())
         {
-            String value = instance.GetDataPointValue(dataPointName);
-            if (value != null && !value.equals(Settings.MISSING_VALUE_STRING))
-                values.add(value);
+            String value = GetDataPointValue(instanceID, dataPointName);
+
+            if (!MiscUtilities.IsMissing(value))
+            	values.add(value.intern());
         }
 
         return new ArrayList<String>(values);
     }
-
-    /** For the specified data points, this method retains only the data points that were specified (others are removed).
-     *
-     * @param toKeep List of data points to keep
-     * @return This collection after filtering
-     */
-    public DataInstanceCollection KeepDataPoints(ArrayList<String> toKeep)
+    
+	public boolean HasDataPoint(String dataPointName)
+	{
+		return _valueIndexMap.containsKey(dataPointName);
+	}
+    
+    public boolean HasDataPoint(String instanceID, String dataPointName)
     {
-        ArrayList<String> toRemove = ListUtilities.GetDifference(GetDataPointNames(), toKeep);
-        RemoveDataPoints(toRemove);
-
-        return this;
-    }
-
-    /** Retains only the data instances with IDs in the specified list. All others are removed.
-     *
-     * @param idsToKeep List of IDs that should be retained
-     * @return This collection after filtering
-     */
-    public DataInstanceCollection KeepInstances(ArrayList<String> idsToKeep)
-    {
-        ArrayList<String> toRemove = ListUtilities.GetDifference(GetIDs(), idsToKeep);
-        RemoveInstances(toRemove);
-
-        return this;
-    }
-
-//    public static DataInstanceCollection MergeLeft(DataInstanceCollection instances1, DataInstanceCollection instances2) throws Exception
-//    {
-//        DataInstanceCollection mergedInstances = new DataInstanceCollection();
-//
-//        for (String instanceID : instances1.GetIDs())
-//        {
-//            DataValues instance1 = instances1.Get(instanceID);
-//
-//            if (instances2.Contains(instanceID))
-//            {
-//                DataValues instance2 = instances2.Get(instanceID);
-//
-//                ArrayList<String> overlappingDataPoints = Lists.Intersect(instance1.GetDataPointNames(), instance2.GetDataPointNames());
-//                if (overlappingDataPoints.size() > 0)
-//                    throw new Exception("No overlapping data points allowed between instances in MergeInner. Overlapping: " + Lists.Join(overlappingDataPoints, " "));
-//
-//                DataValues mergedInstance = new DataValues(instanceID);
-//                mergedInstance.AddDataPoints(instance1);
-//                mergedInstance.AddDataPoints(instance2);
-//                mergedInstances.Add(mergedInstance);
-//            }
-//            else
-//                mergedInstances.Add(instance1);
-//        }
-//
-//        return mergedInstances;
-//    }
-
-//    public static DataInstanceCollection MergeInner(DataInstanceCollection instances1, DataInstanceCollection instances2) throws Exception
-//    {
-//        DataInstanceCollection mergedInstances = new DataInstanceCollection();
-//
-//        ArrayList<String> uniqueInstanceIDs = Lists.Intersect(instances1.GetIDs(), instances2.GetIDs());
-//
-//        for (String instanceID : uniqueInstanceIDs)
-//        {
-//            DataValues instance1 = instances1.Get(instanceID);
-//            DataValues instance2 = instances2.Get(instanceID);
-//
-//            ArrayList<String> overlappingDataPoints = Lists.Intersect(instance1.GetDataPointNames(), instance2.GetDataPointNames());
-//            if (overlappingDataPoints.size() > 0)
-//                throw new Exception("No overlapping data points allowed between instances in MergeInner. Overlapping: " + Lists.Join(overlappingDataPoints, " "));
-//
-//            DataValues mergedInstance = new DataValues(instanceID);
-//            mergedInstance.AddDataPoints(instance1);
-//            mergedInstance.AddDataPoints(instance2);
-//
-//            mergedInstances.Add(mergedInstance);
-//        }
-//
-//        return mergedInstances;
-//    }
-
-    /** This method can be used to permute the data instances IDs in a collection. This should have a similar effect to permuting class labels. It can be used for validation experiments.
-     *
-     * @param instances Data instances to be permuted
-     * @param random Random number generator
-     * @return Permuted data instances
-     */
-    public static DataInstanceCollection PermuteIDs(DataInstanceCollection instances, Random random)
-    {
-        ArrayList<String> ids = ListUtilities.Shuffle(instances.GetIDs(), random);
-        DataInstanceCollection permutedInstances = new DataInstanceCollection();
-
-        for (DataValues instance : instances)
-        {
-            DataValues permutedInstance = instance.Clone();
-            permutedInstance.SetID(ids.remove(0));
-            permutedInstances.Add(permutedInstance);
-        }
-
-        return permutedInstances;
-    }
-
-    /** Prepends the specified text to the beginning of each data point name.
-     *
-     * @param prefix Prefix to be prepended
-     */
-    public void PrefixDataPointNames(String prefix)
-    {
-        for (String dataPointName : GetDataPointNames())
-            UpdateDataPointName(dataPointName, prefix + "_" + dataPointName);
-    }
-
-    /** Removes the specified data points across all instances in the collection.
-     *
-     * @param dataPointNames List of data points to be removed
-     * @return This collection after removal has occurred
-     */
-    public DataInstanceCollection RemoveDataPoints(ArrayList<String> dataPointNames)
-    {
-        for (String dataPointName : dataPointNames)
-            RemoveDataPointName(dataPointName);
-
-        return this;
+    	if (!Contains(instanceID))
+    		return false;
+    	
+    	String value = GetDataPointValue(instanceID, dataPointName);
+    	
+		return value != null && !value.equals(Settings.MISSING_VALUE_STRING);
     }
 
     /** Removes the specified data point from all instances in the collection.
@@ -517,23 +309,15 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public void RemoveDataPointName(String dataPointName)
     {
-        for (DataValues instance : this)
+    	Integer intDataPointName = GetIntRef(dataPointName);
+    	
+        for (String instanceID : this)
         {
-        	if (Contains(instance))  
-        	{
-                instance.RemoveDataPoint(dataPointName);
-                _instances.put(instance.GetID(), instance);
-            }
+        	if (_instances.containsKey(instanceID))
+                _instances.get(instanceID).remove(intDataPointName);
         }
-    }
-
-    /** Removes any data point matching the specified pattern.
-     *
-     * @param pattern Query pattern
-     */
-    public void RemoveDataPointNamesMatching(String pattern)
-    {
-        RemoveDataPoints(GetDataPointNamesMatching(pattern));
+        
+        _valueIndexMap.remove(dataPointName);
     }
 
     /** Removes data instances that are in the specified list.
@@ -548,30 +332,14 @@ public class DataInstanceCollection implements Iterable<DataValues>
 
     /** Removes the specified data instance.
      *
-     * @param id Data instance ID
+     * @param instanceID Data instance ID
      */
-    public void RemoveInstance(String id)
+    public void RemoveInstance(String instanceID)
     {
-        if (Contains(id))
-        	_instances.remove(id);
-        else
-            Singletons.Log.Debug("A data instance with ID " + id + " cannot be removed because it does not exist in the collection.");
+    	_instances.remove(instanceID);
     }
 
-    /** Replaces any missing values with the specified replacement value.
-     *
-     * @param newValue Replacement value
-     * @return This instance after the replacement has occurred
-     */
-    public DataInstanceCollection ReplaceMissingValues(String newValue)
-    {
-        for (DataValues instance : this)
-            UpdateInstance(instance.ReplaceMissingValues(newValue));
-
-        return this;
-    }
-
-    /** Serializes this collection to a text file in a tab-delimited format.
+    /** Saves this collection to a text file in a tab-delimited format.
      *
      * @param outputDirectory Absolute path to the directory where the file will be saved
      * @param fileNamePrefix File name prefix
@@ -580,7 +348,7 @@ public class DataInstanceCollection implements Iterable<DataValues>
      */
     public String SaveToFile(String outputDirectory, String fileNamePrefix) throws Exception
     {
-        AnalysisFileCreator creator = new AnalysisFileCreator(outputDirectory, fileNamePrefix, this, null, true);
+        AnalysisFileCreator creator = new AnalysisFileCreator(outputDirectory, fileNamePrefix, this, null, true, GetDataPointNames());
         return creator.CreateTabDelimitedFile().GetTabDelimitedFilePath();
     }
 
@@ -593,151 +361,55 @@ public class DataInstanceCollection implements Iterable<DataValues>
         return _instances.size();
     }
 
-//    public void SortByID()
+    public Iterator<String> iterator()
+    {
+        return GetIDs().iterator();
+    }
+
+//    @Override
+//    public String toString()
 //    {
-//        Collections.sort(_instances);
+//        StringBuilder builder = new StringBuilder();
+//
+//        for (String instanceID : this)
+//            builder.append(instanceToString(instanceID) + "\n");
+//
+//        return builder.toString();
 //    }
-
-    /** Updates a given data point with the specified values.
-     *
-     * @param dataPointName Data point to be updated
-     * @param values The values for each instance that will be updated
-     */
-    public void UpdateDataPoints(String dataPointName, DataValues values)
-    {
-        for (String instanceID : values)
-            UpdateDataPoint(dataPointName, instanceID, values.GetDataPointValue(instanceID));
-    }
-
-    /** Updates a given data point for a given data instance with the specified value.
-     *
-     * @param dataPointName Data point to be updated
-     * @param instanceID Data instance ID
-     * @param value Update value
-     */
-    public void UpdateDataPoint(String dataPointName, String instanceID, String value)
-    {
-        if (value != null)
-        {
-        	DataValues instance = Get(instanceID);
-        	instance.AddDataPoint(dataPointName, value);
-        	_instances.put(instanceID, instance);
-        }
-    }
-
-    /** Changes an existing data point name to the specified value.
-     *
-     * @param fromDataPointName Current data point name
-     * @param toDataPointName New data point name
-     */
-    public void UpdateDataPointName(String fromDataPointName, String toDataPointName)
-    {
-        for (DataValues instance : this)
-            instance.UpdateDataPointName(fromDataPointName, toDataPointName);
-    }
-
-    /** Replaces an existing data instance with the specified data instance. If the data instance does not exist in this collection, the specified instance is added.
-     *
-     * @param instance Replacement data instance
-     */
-    public void UpdateInstance(DataValues instance)
-    {
-    	_instances.put(instance.GetID(), instance);
-    }
-
-    public Iterator<DataValues> iterator()
-    {
-        return _instances.values().iterator();
-    }
-
-    @Override
-    public String toString()
-    {
-        StringBuilder builder = new StringBuilder();
-
-        for (DataValues instance : this)
-            builder.append(instance.toString() + "\n");
-
-        return builder.toString();
-    }
-
-    /** Serializes this collection to a text file in the ML-Flex format.
-     *
-     * @param filePath Absolute file path where the file will be saved
-     * @throws Exception
-     */
-    public void SerializeToFile(String filePath) throws Exception
-    {
-        FileUtilities.WriteTextToFile(filePath, "");
-
-        for (DataValues instance : this)
-            FileUtilities.AppendTextToFile(filePath, instance.toString() + "\n");
-
-        FileUtilities.AppendTextToFile(filePath, END_OF_FILE_MARKER);
-    }
-
-    /** Deserializes a collection that has been saved in a text file in the ML-Flex format.
-     *
-     * @param filePath Absolute file path where the file is located
-     * @return A data collection
-     * @throws Exception
-     */
-    public static DataInstanceCollection DeserializeFromFile(String filePath) throws Exception
-    {
-        if (!FileUtilities.FileExists(filePath))
-            throw new Exception("No file exists at " + filePath + ".");
-
-        // Create tasks to read through the file and parse it in parallel
-        MultiThreadedTaskHandler taskHandler = new MultiThreadedTaskHandler("deserialize data from " + filePath);
-
-        BigFileReader fileReader = new BigFileReader(filePath);
-
-        for (final String line : fileReader)
-        {
-            taskHandler.Add(new Callable<Object>()
-            {
-                public Object call() throws Exception
-                {
-                    return DataValues.FromString(line);
-                }
-            });
-        }
-
-        // Now parse through the results and make sure the end of the file has been reached
-        boolean reachedEndOfFile = false;
-
-        DataInstanceCollection collection = new DataInstanceCollection();
-        for (Object x : taskHandler.Execute())
-        {
-            DataValues dv = (DataValues)x;
-            if (dv.GetID().equals(END_OF_FILE_MARKER))
-                reachedEndOfFile = true;
-            else
-                collection.Add(dv);
-        }
-
-        if (reachedEndOfFile)
-            return collection;
-        else
-            throw new Exception("Never reached the end of file marker in " + filePath + ".");
-    }
-
+    
     /** Creates a String representation of this object in a format that can be used for debugging purposes.
-     *
-     * @return Short String representation of this object
-     */
-    public String toShortString()
-    {
-        StringBuilder builder = new StringBuilder();
+    *
+    * @return Short String representation of this object
+    */
+   public String toShortString()
+   {
+       StringBuilder builder = new StringBuilder();
 
-        ArrayList<String> instanceIDs = GetIDs();
-        
-        for (int i = 0; i<3; i++)
+       ArrayList<String> instanceIDs = GetIDs();
+       
+       for (int i = 0; i<3; i++)
+       {
+       		String instanceID = instanceIDs.get(i);
+       		builder.append(instanceToString(instanceID) + "\n");
+       }
+
+       return builder.toString();
+   }
+    
+    private String instanceToString(String instanceID)
+    {
+        StringBuilder output = new StringBuilder();
+        output.append(instanceID + ":");
+
+        for (String dataPointName : GetDataPointNames())
         {
-        	DataValues instance = Get(instanceIDs.get(i));
-            builder.append(instance.toShortString() + "\n");
+            String dataPointValue = GetDataPointValue(instanceID, dataPointName);
+            
+			output.append(dataPointName + "=" + dataPointValue.replace(",", COMMA_REPLACE_STRING) + ",");
         }
 
-        return builder.toString();
+        String str = output.toString();
+        str = str.substring(0, str.length()-1);
+        return str;
     }
 }

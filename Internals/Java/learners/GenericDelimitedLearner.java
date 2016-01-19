@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -21,6 +21,8 @@
 
 package mlflex.learners;
 
+import java.util.ArrayList;
+
 import mlflex.core.DataInstanceCollection;
 import mlflex.core.Settings;
 import mlflex.helper.AnalysisFileCreator;
@@ -31,8 +33,8 @@ import mlflex.helper.MiscUtilities;
 public class GenericDelimitedLearner extends GenericArffLearner
 {
     @Override
-    protected String CreateInputFile(DataInstanceCollection instances) throws Exception
+    protected String CreateInputFile(DataInstanceCollection instances, ArrayList<String> features) throws Exception
     {
-        return new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), instances, null, true).CreateTabDelimitedFile().GetTabDelimitedFilePath();
+        return new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), instances, null, true, features).CreateTabDelimitedFile().GetTabDelimitedFilePath();
     }
 }

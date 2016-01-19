@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -69,7 +69,7 @@ public class Prediction
     {
         ArrayList<Double> classProbabilities = new ArrayList<Double>();
 
-        for (String dependentVariableValue : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String dependentVariableValue : Singletons.InstanceVault.DependentVariableOptions)
         {
             if (dependentVariableValue.equals(prediction))
                 classProbabilities.add(1.0);
@@ -87,7 +87,7 @@ public class Prediction
      */
     public String GetRawDependentVariableValue() throws Exception
     {
-        return Singletons.InstanceVault.GetRawDependentVariableValue(InstanceID);
+        return Singletons.InstanceVault.GetDependentVariableValue(InstanceID);
     }
 
     @Override

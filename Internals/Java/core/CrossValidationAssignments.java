@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -39,7 +39,7 @@ public class CrossValidationAssignments
     /** Number of cross validation folds */
     public int NumFolds;
     /** The dependent variable instances that will be used for assigning to the folds */
-    protected DataInstanceCollection DependentVariableInstances;
+    protected HashMap<String, String> DependentVariableInstances;
     /** Whether we are assigning inner cross-validation folds */
     protected boolean IsInner;
 
@@ -50,7 +50,7 @@ public class CrossValidationAssignments
      * @param isInner Indicates whether this is dealing with inner folds or outer folds
      * @throws Exception
      */
-    public CrossValidationAssignments(int numFolds, DataInstanceCollection dependentVariableInstances, boolean isInner) throws Exception
+    public CrossValidationAssignments(int numFolds, HashMap<String, String> dependentVariableInstances, boolean isInner) throws Exception
     {
         NumFolds = numFolds;
         DependentVariableInstances = dependentVariableInstances;
@@ -75,10 +75,10 @@ public class CrossValidationAssignments
             Assignments.put(2, configTestIDs);
 
             // Make sure the instances configured in the experiment configuration are valid
-            if (ListUtilities.Intersect(Singletons.InstanceVault.TransformedDependentVariableInstances.GetIDs(), configTrainIDs).size() == 0)
+            if (ListUtilities.Intersect(new ArrayList<String>(Singletons.InstanceVault.DependentVariableInstances.keySet()), configTrainIDs).size() == 0)
                 Singletons.Log.ExceptionFatal("None of the training IDs specified in the experiment file overlap with the actual data instances.");
 
-            if (ListUtilities.Intersect(Singletons.InstanceVault.TransformedDependentVariableInstances.GetIDs(), configTestIDs).size() == 0)
+            if (ListUtilities.Intersect(new ArrayList<String>(Singletons.InstanceVault.DependentVariableInstances.keySet()), configTestIDs).size() == 0)
                 Singletons.Log.ExceptionFatal("None of the test IDs specified in the experiment file overlap with the actual data instances.");
 
             Singletons.Log.Debug("Training and Action will be performed using assignments from the TRAINING_INSTANCE_IDS and TEST_INSTANCE_IDS experiment configuration settings.");
@@ -93,12 +93,15 @@ public class CrossValidationAssignments
         }
 
         // Check whether this is a leave-one-out cross-validation experiment
-        if (NumFolds == DependentVariableInstances.Size())
+        if (NumFolds == DependentVariableInstances.size())
         {
             // Assign each instance to its own fold
-        	ArrayList<String> dependentVariableInstanceIDs = DependentVariableInstances.GetIDs();
-            for (int i = 1; i <= DependentVariableInstances.Size(); i++)
-                Assignments.put(i, ListUtilities.CreateStringList(DependentVariableInstances.Get(dependentVariableInstanceIDs.get(i-1)).GetID()));
+        	int count = 1;
+        	for (String instanceID : DependentVariableInstances.keySet())
+        	{
+        		Assignments.put(count, ListUtilities.CreateStringList(instanceID));
+        		count++;
+        	}
 
             return this;
         }
@@ -118,10 +121,17 @@ public class CrossValidationAssignments
     {
         int currentFold = 1;
 
-        for (String option : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String option : Singletons.InstanceVault.DependentVariableOptions)
         {
             // Get all instances of the given class
-            ArrayList<String> instanceIDs = DependentVariableInstances.FilterByDataPointValue(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName, option).GetIDs();
+            ArrayList<String> instanceIDs = new ArrayList<String>();
+            for (String instanceID : DependentVariableInstances.keySet())
+            {
+            	String value = DependentVariableInstances.get(instanceID);
+
+            	if (value.equals(option))
+            		instanceIDs.add(instanceID);
+            }
 
             // Randomly shuffle the instances
             Collections.shuffle(instanceIDs, new Random(Singletons.RandomSeed));
@@ -262,7 +272,6 @@ public class CrossValidationAssignments
      */
     protected ArrayList<String> FilterTrainIDs(ArrayList<String> trainIDs) throws Exception
     {
-        //return ListUtilities.RemoveAll(trainIDs, GetTrainIDsToExclude(trainIDs));
         return ListUtilities.GetDifference(trainIDs, GetTrainIDsToExclude(trainIDs));
     }
 
@@ -294,33 +303,19 @@ public class CrossValidationAssignments
      */
     public DataInstanceCollection GetTrainInstances(AbstractDataProcessor processor, int fold) throws Exception
     {
-        return GetTrainInstances(processor, fold, null);
+        return Singletons.InstanceVault.GetInstancesForAnalysis(processor, GetTrainIDs(fold));
     }
 
     /** Indicates which training instances for a given data processor are assigned to a given cross-validation fold.
      *
      * @param processor Data processor
      * @param fold Cross-validation fold
-     * @param dataPoints List of data points that should be included for the given data instances
      * @return Collection of instances
      * @throws Exception
      */
-    public DataInstanceCollection GetTrainInstances(AbstractDataProcessor processor, int fold, ArrayList<String> dataPoints) throws Exception
+    public DataInstanceCollection GetTestInstances(AbstractDataProcessor processor, int fold) throws Exception
     {
-        return Singletons.InstanceVault.GetInstancesForAnalysis(processor, GetTrainIDs(fold), dataPoints);
-    }
-
-    /** Indicates which training instances for a given data processor are assigned to a given cross-validation fold.
-     *
-     * @param processor Data processor
-     * @param fold Cross-validation fold
-     * @param dataPoints List of data points that should be included for the given data instances
-     * @return Collection of instances
-     * @throws Exception
-     */
-    public DataInstanceCollection GetTestInstances(AbstractDataProcessor processor, int fold, ArrayList<String> dataPoints) throws Exception
-    {
-        return Singletons.InstanceVault.GetInstancesForAnalysis(processor, GetTestIDs(fold), dataPoints);
+        return Singletons.InstanceVault.GetInstancesForAnalysis(processor, GetTestIDs(fold));
     }
 
     /** Indicates how many test instances are assigned to a given fold for a given data processor. This method is provided to improve performance.
@@ -332,7 +327,7 @@ public class CrossValidationAssignments
      */
     public int GetNumTestInstances(AbstractDataProcessor processor, int fold) throws Exception
     {
-        return GetTestInstances(processor, fold, new ArrayList<String>()).Size();
+        return GetTestInstances(processor, fold).Size();
     }
 
     /** Indicates whether a given combination of data processor and cross-validation fold have any test instances.
@@ -376,7 +371,11 @@ public class CrossValidationAssignments
 
             for (int f : GetAllFoldNumbers())
             {
-                CrossValidationAssignments assignments = new CrossValidationAssignments(Singletons.Config.GetNumInnerCrossValidationFolds(), DependentVariableInstances.Get(GetTrainIDs(f)), true).AssignFolds();
+            	HashMap<String, String> instanceMap = new HashMap<String, String>();
+            	for (String instanceID : GetTrainIDs(f))
+            		instanceMap.put(instanceID, Singletons.InstanceVault.GetDependentVariableValue(instanceID));
+            	
+                CrossValidationAssignments assignments = new CrossValidationAssignments(Singletons.Config.GetNumInnerCrossValidationFolds(), instanceMap, true).AssignFolds();
                 _innerAssignments.put(f, assignments);
             }
         }

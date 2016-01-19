@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -23,7 +23,7 @@ package mlflex.core;
 
 import mlflex.helper.ListUtilities;
 
-import java.util.ArrayList;
+import java.util.*;
 
 /** This class acts as a wrapper for performing classification tasks. It interprets parameters for executing these tasks, based on what has been configured in ML-Flex's configuration files.
  * @author Stephen Piccolo
@@ -56,20 +56,13 @@ public class ClassificationAlgorithm
      * @return Predictions and model information
      * @throws Exception
      */
-    public ModelPredictions TrainTest(DataInstanceCollection trainData, DataInstanceCollection testData, DataInstanceCollection dependentVariableInstances) throws Exception
+    public ModelPredictions TrainTest(DataInstanceCollection trainData, DataInstanceCollection testData, HashMap<String, String> dependentVariableInstances, ArrayList<String> features) throws Exception
     {
         if (trainData.Size() == 0 || testData.Size() == 0)
             throw new Exception("No predictions can be made because the training and/or test set have no data");
 
-        Singletons.Log.Debug("For any data point that is in the training set but not the test set, add it to the test set and specify that the values are missing");
-        for (String dataPoint : ListUtilities.GetDifference(trainData.GetDataPointNames(), testData.GetDataPointNames()))
-            for (String testInstanceID : testData.GetIDs())
-                testData.Add(dataPoint, testInstanceID, Settings.MISSING_VALUE_STRING);
-
-        Singletons.Log.Debug("For any data point that is in the test set but not the training set, add it to the training set and specify that the values are missing");
-        for (String dataPoint : ListUtilities.GetDifference(testData.GetDataPointNames(), trainData.GetDataPointNames()))
-            for (String trainInstanceID : trainData.GetIDs())
-                trainData.Add(dataPoint, trainInstanceID, Settings.MISSING_VALUE_STRING);
+        ArrayList<String> overlappingFeatures = ListUtilities.Intersect(trainData.GetDataPointNames(), testData.GetDataPointNames());
+        overlappingFeatures = ListUtilities.Intersect(overlappingFeatures, features);
 
         Singletons.Log.Debug("Do a sanity check to make sure that no instances overlap between the training and test sets");
         if (ListUtilities.Intersect(trainData.GetIDs(), testData.GetIDs()).size() > 0)
@@ -92,7 +85,7 @@ public class ClassificationAlgorithm
             String commandTemplate = learnerConfig.CommandTemplate.replace("{Settings.MAIN_DIR}", Settings.MAIN_DIR);
 
             Singletons.Log.Debug("Begin train and test");
-            return learnerConfig.MachineLearner.TrainTest(commandTemplate, AlgorithmParameters, trainData, testData);
+            return learnerConfig.MachineLearner.TrainTest(commandTemplate, AlgorithmParameters, trainData, testData, overlappingFeatures);
         }
         catch (Exception ex)
         {
@@ -102,7 +95,11 @@ public class ClassificationAlgorithm
             errorMessage += "Algorithm: " + Key + ". ";
             errorMessage += "Training data (first five instances):\n" + trainData.toShortString() + "\n";
             errorMessage += "Test data (first five instances):\n" + testData.toShortString() + "\n";
-            errorMessage += "Dependent variable data (first five instances):\n" + dependentVariableInstances.toShortString() + "\n";
+
+            errorMessage += "Dependent variable data (first five instances):\n";
+            
+            for (int i=0; i<5; i++)
+            	errorMessage += dependentVariableInstances.get(new ArrayList<String>(dependentVariableInstances.keySet()).get(i)) + "\n";
             throw new Exception(errorMessage);
         }
     }

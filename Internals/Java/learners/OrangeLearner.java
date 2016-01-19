@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -21,9 +21,6 @@
 
 package mlflex.learners;
 
-import mlflex.core.ModelPredictions;
-import mlflex.core.Prediction;
-import mlflex.core.Predictions;
 import mlflex.core.*;
 import mlflex.helper.*;
 
@@ -38,7 +35,7 @@ public class OrangeLearner extends AbstractMachineLearner
     public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         // Create a file with the training data that can be used as an input to Orange
-        String dataFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeDataForRanking_" + MiscUtilities.GetUniqueID(), trainData, null, true).CreateOrangeFile().GetOrangeFilePath();
+        String dataFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeDataForRanking_" + MiscUtilities.GetUniqueID(), trainData, null, true, trainData.GetDataPointNames()).CreateOrangeFile().GetOrangeFilePath();
 
         // Specify output paths
         String outputDirectoryPath = Settings.TEMP_RESULTS_DIR + MiscUtilities.GetUniqueID() + "/";
@@ -63,13 +60,13 @@ public class OrangeLearner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData, ArrayList<String> features) throws Exception
     {
         // Create the input file for training data
-        String trainingFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeTrain_" + MiscUtilities.GetUniqueID(), trainData, testData, true).CreateOrangeFile().GetOrangeFilePath();
+        String trainingFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeTrain_" + MiscUtilities.GetUniqueID(), trainData, testData, true, features).CreateOrangeFile().GetOrangeFilePath();
 
         // Create the input file for test data
-        String testFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeTest_" + MiscUtilities.GetUniqueID(), testData, trainData, false).CreateOrangeFile().GetOrangeFilePath();
+        String testFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "OrangeTest_" + MiscUtilities.GetUniqueID(), testData, trainData, false, features).CreateOrangeFile().GetOrangeFilePath();
 
         // Specify file paths
         String outputDirectoryPath = Settings.TEMP_RESULTS_DIR + MiscUtilities.GetUniqueID() + "/";
@@ -96,18 +93,18 @@ public class OrangeLearner extends AbstractMachineLearner
         ArrayList<Prediction> predictions = new ArrayList<Prediction>();
 
         // Parse through the raw output and extract a prediction + probabilities for each test instance
-        for (DataValues testInstance : testData)
+        for (String testInstanceID : testData)
         {
-            String actual = Singletons.InstanceVault.GetTransformedDependentVariableValue(testInstance.GetID());
+            String actual = Singletons.InstanceVault.GetDependentVariableValue(testInstanceID);
             String prediction = predictionLines.remove(0);
             ArrayList<String> probabilities = ListUtilities.CreateStringList(probabilityLines.remove(0).trim().split("\t"));
 
             ArrayList<Double> classProbabilities = new ArrayList<Double>();
 
-            for (String x : Singletons.InstanceVault.TransformedDependentVariableOptions)
+            for (String x : Singletons.InstanceVault.DependentVariableOptions)
                 classProbabilities.add(ParseProbability(probabilityClasses, probabilities, x, prediction));
 
-            predictions.add(new Prediction(testInstance.GetID(), actual, prediction, classProbabilities));
+            predictions.add(new Prediction(testInstanceID, actual, prediction, classProbabilities));
         }
 
         // Clean up

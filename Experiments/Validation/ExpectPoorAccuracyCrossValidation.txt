@@ -1,4 +1,4 @@
 # This experiment is used for validation to test a scenario where poor accuracy is expected. This helps verify that ML-Flex is behaving the way it should. In this example, cross validation is repeated multiple times.
 DATA_PROCESSORS=mlflex.dataprocessors.RandomDataProcessor(40, 5, 5)
 CLASSIFICATION_ALGORITHMS=weka_naive_bayes
-NUM_ITERATIONS=100
+NUM_ITERATIONS=10

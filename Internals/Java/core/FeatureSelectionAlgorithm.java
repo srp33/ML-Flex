@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -22,6 +22,8 @@
 package mlflex.core;
 
 import java.util.ArrayList;
+
+import mlflex.helper.ListUtilities;
 
 /** This class acts as a wrapper for performing feature-selection tasks. It interprets parameters for executing these tasks, based on what has been configured in ML-Flex's configuration files.
  * @author Stephen Piccolo
@@ -67,7 +69,7 @@ public class FeatureSelectionAlgorithm
             LearnerConfig learnerConfig = Settings.LearnerConfigMap.get(LearnerKey);
             String commandTemplate = learnerConfig.CommandTemplate.replace("{Settings.MAIN_DIR}", Settings.MAIN_DIR);
 
-            return learnerConfig.MachineLearner.SelectOrRankFeatures(commandTemplate, AlgorithmParameters, trainData.Clone());
+            return learnerConfig.MachineLearner.SelectOrRankFeatures(commandTemplate, AlgorithmParameters, trainData);
         }
         catch (Exception ex)
         {
@@ -76,7 +78,10 @@ public class FeatureSelectionAlgorithm
             String errorMessage = "An exception occurred while selecting features. ";
             errorMessage += "Algorithm Key: " + Key + ". ";
             errorMessage += "Train data (first five instances):\n" + trainData.toShortString() + "\n";
-            errorMessage += "Dependent variable data (first five instances):\n" + Singletons.InstanceVault.TransformedDependentVariableInstances.toShortString() + "\n";
+            errorMessage += "Dependent variable data (first five instances):\n";
+            
+            for (int i=0; i<5; i++)
+            	errorMessage += Singletons.InstanceVault.DependentVariableInstances.get(new ArrayList<String>(Singletons.InstanceVault.DependentVariableInstances.keySet()).get(i)) + "\n";
 
             throw new Exception(errorMessage);
         }

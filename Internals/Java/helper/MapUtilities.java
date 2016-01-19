@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -68,4 +68,23 @@ public class MapUtilities
 
         return count;
     }
+    
+    /** This method can be used to permute the data instances IDs in a collection. This should have a similar effect to permuting class labels. It can be used for validation experiments.
+    *
+    * @param instances Data instances to be permuted
+    * @param random Random number generator
+    * @return Permuted data instances
+    */
+   public static HashMap<String, String> PermuteIDs(HashMap<String, String> map, Random random)
+   {
+       ArrayList<String> instanceIDs = ListUtilities.Shuffle(new ArrayList<String>(map.keySet()), random);
+       ArrayList<String> values = new ArrayList<String>(map.values());
+
+       HashMap<String, String> permutedInstances = new HashMap<String, String>();
+       
+       for (int i=0; i<instanceIDs.size(); i++)
+    	   permutedInstances.put(instanceIDs.get(i), values.get(i));
+
+       return permutedInstances;
+   }
 }

@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -23,6 +23,9 @@ package mlflex.helper;
 
 import mlflex.core.*;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.*;
 
 /** This class is used to transform data from the ML-Flex data format to the format that is required for external software components.
@@ -35,7 +38,6 @@ public class AnalysisFileCreator
     {
         ARFF(".arff"),
         ORANGE(".tab"),
-        //MLPY(".dat"),
         GCT(".gct"),
         CLS(".cls"),
         SURVIVAL("_survival.txt"),
@@ -63,6 +65,7 @@ public class AnalysisFileCreator
     private DataInstanceCollection _dataInstances;
     private DataInstanceCollection _otherInstances;
     private boolean _includeDependentVariable;
+    private ArrayList<String> _features;
 
     /** Constructor
      *
@@ -72,18 +75,19 @@ public class AnalysisFileCreator
      * @param otherInstances Collection of other data instances that may be necessary for determining all options for a given data point (may be left null)
      * @param includeDependentVariable Whether to include dependent-variable values in the output
      */
-    public AnalysisFileCreator(String outputDirectory, String fileNamePrefix, DataInstanceCollection dataInstances, DataInstanceCollection otherInstances, boolean includeDependentVariable)
+    public AnalysisFileCreator(String outputDirectory, String fileNamePrefix, DataInstanceCollection dataInstances, DataInstanceCollection otherInstances, boolean includeDependentVariable, ArrayList<String> features)
     {
         _outputDir = outputDirectory;
         _fileNamePrefix = fileNamePrefix;
         _dataInstances = dataInstances;
         _otherInstances = otherInstances;
         _includeDependentVariable = includeDependentVariable;
+        _features = features;
     }
 
     private String GetDependentVariableValue(String instanceID) throws Exception
     {
-        return Singletons.InstanceVault.GetTransformedDependentVariableValue(instanceID);
+        return Singletons.InstanceVault.GetDependentVariableValue(instanceID);
     }
 
     /** Generates files in the ARFF format.
@@ -93,12 +97,12 @@ public class AnalysisFileCreator
     public AnalysisFileCreator CreateArffFile() throws Exception
     {
         String outFilePath = GetFilePath(Extension.ARFF);
+        PrintWriter outFile = new PrintWriter(new BufferedWriter(new FileWriter(outFilePath)));
 
-        StringBuilder output = new StringBuilder();
-        output.append("@relation thedata\n\n");
+        outFile.write("@relation thedata\n\n");
 
         Singletons.Log.Debug("Sorting data point names");
-        ArrayList<String> dataPointNames = ListUtilities.SortStringList(_dataInstances.GetDataPointNames());
+        ArrayList<String> dataPointNames = ListUtilities.SortStringList(ListUtilities.Intersect(_features, _dataInstances.GetDataPointNames()));
 
         Singletons.Log.Debug("Sorting instance IDs");
         ArrayList<String> instanceIDs = ListUtilities.SortStringList(_dataInstances.GetIDs());
@@ -111,48 +115,55 @@ public class AnalysisFileCreator
             if (_otherInstances != null)
                 uniqueValues.addAll(_otherInstances.GetUniqueValues(dataPointName));
 
-            AppendArffAttribute(new ArrayList<String>(uniqueValues), dataPointName, output);
+            AppendArffAttribute(new ArrayList<String>(uniqueValues), dataPointName, outFile);
         }
 
         Singletons.Log.Debug("Appending ARFF attributes for dependent variable");
         if (_includeDependentVariable)
-            AppendArffAttribute(Singletons.InstanceVault.TransformedDependentVariableOptions, Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName, output);
+            AppendArffAttribute(Singletons.InstanceVault.DependentVariableOptions, Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName, outFile);
 
-        output.append("\n@data");
+        outFile.write("\n@data");
 
         Singletons.Log.Debug("Creating ARFF output text object");
         for (String instanceID : instanceIDs)
         {
-            DataValues instance = _dataInstances.Get(instanceID);
-            output.append("\n" + ListUtilities.Join(FormatOutputValues(instance.GetDataPointValues(dataPointNames)), ","));
+
+for (String x : _dataInstances.GetDataPointValues(instanceID, dataPointNames))
+	if (x == null)
+	{
+		Singletons.Log.Info("null value found!!!");
+		Singletons.Log.Info(dataPointNames);
+		Singletons.Log.Info(_dataInstances.GetDataPointValues(instanceID, dataPointNames));
+		System.exit(0);
+	}
+            outFile.write("\n" + ListUtilities.Join(FormatOutputValues(_dataInstances.GetDataPointValues(instanceID, dataPointNames)), ","));
 
             if (_includeDependentVariable)
-                output.append("," + FormatOutputValue(GetDependentVariableValue(instanceID)));
+                outFile.write("," + FormatOutputValue(GetDependentVariableValue(instanceID)));
         }
-
-        Singletons.Log.Debug("Saving ARFF output to file");
-        FileUtilities.WriteTextToFile(outFilePath, output.toString());
+        
+        outFile.close();
 
         return this;
     }
 
-    private void AppendArffAttribute(ArrayList<String> values, String dataPointName, StringBuilder output) throws Exception
+    private void AppendArffAttribute(ArrayList<String> values, String dataPointName, PrintWriter outFile) throws Exception
     {
-        output.append("@attribute " + dataPointName + " ");
+        outFile.write("@attribute " + dataPointName + " ");
 
         if (DataTypeUtilities.HasOnlyBinary(values))
-            output.append("{" + ListUtilities.Join(ListUtilities.SortStringList(values), ",") + "}");
+            outFile.write("{" + ListUtilities.Join(ListUtilities.SortStringList(values), ",") + "}");
         else
         {
             if (DataTypeUtilities.HasOnlyNumeric(values))
-                output.append("real");
+                outFile.write("real");
             else
             {
                 FormatOutputValues(values);
-                output.append("{" + ListUtilities.Join(ListUtilities.SortStringList(values), ",") + "}");
+                outFile.write("{" + ListUtilities.Join(ListUtilities.SortStringList(values), ",") + "}");
             }
         }
-        output.append("\n");
+        outFile.write("\n");
     }
 
     /** This method generates a basic tab-delimited file with variables as rows and instances as columns.
@@ -161,26 +172,26 @@ public class AnalysisFileCreator
      */
     public AnalysisFileCreator CreateTabDelimitedFile() throws Exception
     {
-        ArrayList<ArrayList<String>> fileItems = new ArrayList<ArrayList<String>>();
-
-        ArrayList<String> dataPoints = ListUtilities.SortStringList(_dataInstances.GetDataPointNames());
+        PrintWriter outFile = new PrintWriter(new BufferedWriter(new FileWriter(GetTabDelimitedFilePath())));
+        
+        ArrayList<String> dataPoints = ListUtilities.SortStringList(ListUtilities.Intersect(_features, _dataInstances.GetDataPointNames()));
         ArrayList<String> instanceIDs = ListUtilities.SortStringList(_dataInstances.GetIDs());
 
         ArrayList<String> headerItems = MiscUtilities.UnformatNames(instanceIDs);
         headerItems.add(0, "");
-        fileItems.add(headerItems);
+        outFile.write(ListUtilities.Join(headerItems, "\t") + "\n");
 
         for (String dataPoint : dataPoints)
         {
             ArrayList<String> rowItems = ListUtilities.CreateStringList(dataPoint);
 
             for (String instanceID : instanceIDs)
-                rowItems.add(_dataInstances.Get(instanceID).GetDataPointValue(dataPoint));
+                rowItems.add(_dataInstances.GetDataPointValue(instanceID, dataPoint));
 
             rowItems = ListUtilities.ReplaceAllExactMatches(rowItems, Settings.MISSING_VALUE_STRING, "NA");
             FormatOutputValues(rowItems);
 
-            fileItems.add(rowItems);
+            outFile.write(ListUtilities.Join(rowItems, "\t") + "\n");
         }
 
         if (_includeDependentVariable)
@@ -188,13 +199,13 @@ public class AnalysisFileCreator
             ArrayList<String> rowItems = ListUtilities.CreateStringList(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName);
 
             for (String instanceID : instanceIDs)
-                rowItems.add(Singletons.InstanceVault.GetTransformedDependentVariableValue(instanceID));
+                rowItems.add(Singletons.InstanceVault.GetDependentVariableValue(instanceID));
 
-            fileItems.add(rowItems);
+            outFile.write(ListUtilities.Join(rowItems, "\t") + "\n");
         }
 
-        FileUtilities.WriteLinesToFile(GetTabDelimitedFilePath(), fileItems);
-
+        outFile.close();
+        
         return this;
     }
 
@@ -205,9 +216,11 @@ public class AnalysisFileCreator
      */
     public AnalysisFileCreator CreateTransposedTabDelimitedFile(boolean includeInstanceIDs) throws Exception
     {
-        ArrayList<ArrayList<String>> fileItems = new ArrayList<ArrayList<String>>();
+        PrintWriter outFile = new PrintWriter(new BufferedWriter(new FileWriter(GetTabDelimitedFilePath())));
+        
+        ArrayList<String> dataPointNames = ListUtilities.SortStringList(ListUtilities.Intersect(_features, _dataInstances.GetDataPointNames()));
 
-        ArrayList<String> headerDataPoints = MiscUtilities.UnformatNames(new ArrayList<String>(_dataInstances.GetDataPointNames()));
+        ArrayList<String> headerDataPoints = MiscUtilities.UnformatNames(new ArrayList<String>(dataPointNames));
 
         if (includeInstanceIDs)
             headerDataPoints.add(0, "ID");
@@ -215,59 +228,29 @@ public class AnalysisFileCreator
         if (_includeDependentVariable)
             headerDataPoints.add(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName);
 
-        fileItems.add(headerDataPoints);
+        outFile.write(ListUtilities.Join(headerDataPoints, "\t") + "\n");
 
-        for (DataValues instance : _dataInstances)
+        for (String instanceID : _dataInstances)
         {
-            ArrayList<String> values = instance.GetDataPointValues(_dataInstances.GetDataPointNames());
+            ArrayList<String> values = _dataInstances.GetDataPointValues(instanceID, dataPointNames);
 
             if (includeInstanceIDs)
-                values.add(0, instance.GetID());
+                values.add(0, instanceID);
 
             if (_includeDependentVariable)
-                values.add(GetDependentVariableValue(instance.GetID()));
+                values.add(GetDependentVariableValue(instanceID));
 
             values = ListUtilities.ReplaceAllExactMatches(values, Settings.MISSING_VALUE_STRING, "NA");
 
             FormatOutputValues(values);
 
-            fileItems.add(values);
+            outFile.write(ListUtilities.Join(values, "\t") + "\n");
         }
-
-        FileUtilities.WriteLinesToFile(GetTransposedTabDelimitedFilePath(), fileItems);
+        
+        outFile.close();
 
         return this;
     }
-
-//    public AnalysisFileCreator CreateGenePatternFiles() throws Exception
-//    {
-//        Files.WriteTextToFile(GetFilePath(Extension.GCT), "#1.2\n");
-//        Files.AppendTextToFile(GetFilePath(Extension.GCT), String.valueOf(_dataInstances.GetDataPointNames().size()) + "\t" + _dataInstances.Size() + "\n");
-//        Files.AppendTextToFile(GetFilePath(Extension.GCT), "Name\tDescription\t" + Strings.Join(_dataInstances.GetIDs(), "\t") + "\n");
-//
-//        for (String dataPointName : _dataInstances.GetDataPointNames())
-//        {
-//            String line = dataPointName + "\t" + dataPointName + "\t";
-//            line += Strings.Join(FormatOutputValues(_dataInstances.GetValues(dataPointName).GetAllValues()), "\t");
-//            Files.AppendTextToFile(GetFilePath(Extension.GCT), line + "\n");
-//        }
-//
-//        if (_dataInstances.HasClass())
-//        {
-//            ArrayList<String> classes = Lists.GetUniqueValues(_dataInstances.GetClassValues());
-//
-//            String output = _dataInstances.Size() + " ";
-//            output += classes.size() + " 1\n";
-//            output += "# " + Strings.Join(classes, " ") + "\n";
-//
-//            for (DataValues patient : _dataInstances)
-//                output += classes.indexOf(patient.GetClassValue()) + " ";
-//
-//            Files.AppendTextToFile(GetFilePath(Extension.CLS), output.trim() + "\n");
-//        }
-//
-//        return this;
-//    }
 
     /** This method generates a text file in the format required by the Orange machine-learning framework.
      * @return This instance
@@ -275,10 +258,10 @@ public class AnalysisFileCreator
      */
     public AnalysisFileCreator CreateOrangeFile() throws Exception
     {
-        DataInstanceCollection instances = _dataInstances.Clone();
+        DataInstanceCollection instances = _dataInstances;
 
         String outFilePath = GetFilePath(Extension.ORANGE);
-        ArrayList<String> dataPointNames = instances.GetDataPointNames();
+        ArrayList<String> dataPointNames = ListUtilities.SortStringList(ListUtilities.Intersect(_features, _dataInstances.GetDataPointNames()));
 
         String header = ListUtilities.Join(dataPointNames, "\t");
         header += _includeDependentVariable ? "\t" + Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName : "";
@@ -290,12 +273,12 @@ public class AnalysisFileCreator
 
         FileUtilities.WriteTextToFile(outFilePath, header);
 
-        for (DataValues instance : instances)
+        for (String instanceID : instances)
         {
-            String line = ListUtilities.Join(FormatOutputValues(instance.GetDataPointValues(dataPointNames)), "\t");
+            String line = ListUtilities.Join(FormatOutputValues(_dataInstances.GetDataPointValues(instanceID, dataPointNames)), "\t");
 
             if (_includeDependentVariable)
-                line += "\t" + FormatOutputValue(GetDependentVariableValue(instance.GetID()));
+                line += "\t" + FormatOutputValue(GetDependentVariableValue(instanceID));
 
             FileUtilities.AppendTextToFile(outFilePath, line + "\n");
         }
@@ -323,10 +306,11 @@ public class AnalysisFileCreator
     public AnalysisFileCreator CreateC5NamesFile() throws Exception
     {
         StringBuilder output = new StringBuilder();
+        output.append(ListUtilities.Join(Singletons.InstanceVault.DependentVariableOptions, ", ") + ".\n\n");
+        
+        ArrayList<String> dataPointNames = ListUtilities.SortStringList(ListUtilities.Intersect(_features, _dataInstances.GetDataPointNames()));
 
-        output.append(ListUtilities.Join(Singletons.InstanceVault.TransformedDependentVariableOptions, ", ") + ".\n\n");
-
-        for (String dataPointName : _dataInstances.GetDataPointNames())
+        for (String dataPointName : dataPointNames)
         {
             output.append(dataPointName + ":\t");
             ArrayList<String> uniqueDataValues = _dataInstances.GetUniqueValues(dataPointName);
@@ -369,10 +353,10 @@ public class AnalysisFileCreator
     {
         StringBuilder output = new StringBuilder();
 
-        for (DataValues instance : _dataInstances)
+        for (String instanceID : _dataInstances)
         {
-            ArrayList<String> values = instance.GetDataPointValues(_dataInstances.GetDataPointNames());
-            values.add(areTestInstances ? "?" : GetDependentVariableValue(instance.GetID()));
+            ArrayList<String> values = _dataInstances.GetDataPointValues(instanceID, _dataInstances.GetDataPointNames());
+            values.add(areTestInstances ? "?" : GetDependentVariableValue(instanceID));
             output.append(ListUtilities.Join(values, ",") + "\n");
         }
 

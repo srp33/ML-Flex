@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -74,7 +74,7 @@ public class ModelSelector
 
     private PredictionEvaluator GetModelEvaluator(int numFeatures, int outerFold) throws Exception
     {
-        PredictionEvaluator evaluator = new PredictionEvaluator(Processor, FeatureSelectionAlgorithm, ClassificationAlgorithm, numFeatures, outerFold, Singletons.InstanceVault.TransformedDependentVariableInstances);
+        PredictionEvaluator evaluator = new PredictionEvaluator(Processor, FeatureSelectionAlgorithm, ClassificationAlgorithm, numFeatures, outerFold, Singletons.InstanceVault.DependentVariableInstances);
         int index = PredictionEvaluators.indexOf(evaluator);
 
         if (index == -1)
@@ -364,7 +364,7 @@ public class ModelSelector
 
                         for (int outerFold : Singletons.InstanceVault.GetCrossValidationAssignments().GetFoldsWithTestData(processor))
                             for (int numFeatures : Singletons.Config.GetNumFeaturesOptions(processor, fsAlgorithm))
-                                predictionEvaluators.add(new PredictionEvaluator(processor, fsAlgorithm, cAlgorithm, numFeatures, outerFold, Singletons.InstanceVault.TransformedDependentVariableInstances));
+                                predictionEvaluators.add(new PredictionEvaluator(processor, fsAlgorithm, cAlgorithm, numFeatures, outerFold, Singletons.InstanceVault.DependentVariableInstances));
 
                         modelSelectors.add(new ModelSelector(processor, fsAlgorithm, cAlgorithm, predictionEvaluators));
                     }

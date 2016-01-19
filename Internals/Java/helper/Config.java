@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -321,7 +321,7 @@ public class Config
         int configNumFolds = GetIntValue("NUM_OUTER_CROSS_VALIDATION_FOLDS", "10");
 
         if (configNumFolds < 1)
-            return Singletons.InstanceVault.TransformedDependentVariableInstances.Size();
+            return Singletons.InstanceVault.DependentVariableInstances.size();
 
         return configNumFolds;
     }

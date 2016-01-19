@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -28,6 +28,7 @@ import mlflex.helper.FileUtilities;
 import mlflex.helper.ListUtilities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.Callable;
 
 /** This class contains logic for evaluating classification models. It orchestrates the process of performing classification for a particular data processor, feature-selection algorithm, classification algorithm, number of features, and cross-validation fold. It also contains logic for distributing tasks across multiple computing nodes and threads.
@@ -46,7 +47,7 @@ public class PredictionEvaluator
     /** The outer cross-validation fold number. */
     public final int OuterFold;
 
-    private final DataInstanceCollection _dependentVariableInstances;
+    private final HashMap<String, String> _dependentVariableInstances;
 
     /** Constructor
      *
@@ -58,7 +59,7 @@ public class PredictionEvaluator
      * @param dependentVariableInstances Dependent-variable data instances
      * @throws Exception
      */
-    public PredictionEvaluator(AbstractDataProcessor processor, FeatureSelectionAlgorithm selectionAlgorithm, ClassificationAlgorithm classificationAlgorithm, int numFeatures, int outerFold, DataInstanceCollection dependentVariableInstances) throws Exception
+    public PredictionEvaluator(AbstractDataProcessor processor, FeatureSelectionAlgorithm selectionAlgorithm, ClassificationAlgorithm classificationAlgorithm, int numFeatures, int outerFold, HashMap<String, String> dependentVariableInstances) throws Exception
     {
         Processor = processor;
         FeatureSelectionAlgorithm = selectionAlgorithm;
@@ -146,8 +147,8 @@ public class PredictionEvaluator
                     {
                         // This is the actual code that will be executed for the task
                         ArrayList<String> features = GetInnerFeatures(innerFold);
-                        DataInstanceCollection trainData = Singletons.InstanceVault.GetCrossValidationAssignments().GetInnerAssignments(OuterFold).GetTrainInstances(Processor, innerFold, features);
-                        DataInstanceCollection testData = Singletons.InstanceVault.GetCrossValidationAssignments().GetInnerAssignments(OuterFold).GetTestInstances(Processor, innerFold, features);
+                        DataInstanceCollection trainData = Singletons.InstanceVault.GetCrossValidationAssignments().GetInnerAssignments(OuterFold).GetTrainInstances(Processor, innerFold);
+                        DataInstanceCollection testData = Singletons.InstanceVault.GetCrossValidationAssignments().GetInnerAssignments(OuterFold).GetTestInstances(Processor, innerFold);
 
                         return MakeAndSavePredictions(features, trainData, testData, GetInnerSaveFilePath(innerFold), null, GetInnerDescription(innerFold));
                     }
@@ -164,12 +165,12 @@ public class PredictionEvaluator
                 {
                 	Singletons.Log.Debug("Make predictions - get outer features");
                     ArrayList<String> features = GetOuterFeatures();
-                    
+
                 	Singletons.Log.Debug("Make predictions - get training instances");
-                    DataInstanceCollection trainData = Singletons.InstanceVault.GetCrossValidationAssignments().GetTrainInstances(Processor, OuterFold, features);
-                    
+                    DataInstanceCollection trainData = Singletons.InstanceVault.GetCrossValidationAssignments().GetTrainInstances(Processor, OuterFold);
+
                 	Singletons.Log.Debug("Make predictions - get test instances");
-                    DataInstanceCollection testData = Singletons.InstanceVault.GetCrossValidationAssignments().GetTestInstances(Processor, OuterFold, features);
+                    DataInstanceCollection testData = Singletons.InstanceVault.GetCrossValidationAssignments().GetTestInstances(Processor, OuterFold);
 
                 	Singletons.Log.Debug("Make predictions - make and save predictions");
                     return MakeAndSavePredictions(features, trainData, testData, GetOuterSaveFilePath(), GetAlgorithmOutputFilePath(), GetOuterDescription());
@@ -187,7 +188,7 @@ public class PredictionEvaluator
             return Boolean.TRUE;
 
         Singletons.Log.Debug("Make the predictions");
-        ModelPredictions modelPredictions = ClassificationAlgorithm.TrainTest(trainData, testData, _dependentVariableInstances.Clone());
+        ModelPredictions modelPredictions = ClassificationAlgorithm.TrainTest(trainData, testData, _dependentVariableInstances, features);
 
         Singletons.Log.Debug("Make sure the predictions are valid");
         if (!PredictionsAreValid(testData, modelPredictions, description))

@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -25,8 +25,6 @@ import mlflex.core.*;
 import mlflex.helper.ListUtilities;
 import mlflex.helper.MiscUtilities;
 import mlflex.helper.ResultsFileUtilities;
-import mlflex.transformation.AbstractDependentVariableTransformer;
-import mlflex.transformation.SimpleDependentVariableTransformer;
 
 import java.util.ArrayList;
 
@@ -50,36 +48,6 @@ public class DependentVariableDataProcessor extends AbstractDataProcessor
         return DataPointName;
     }
 
-    /** Dependent variables can be transformed before they are used in analyses. For example, if the dependent variable is continuous, a transformer can be used to convert it to a discrete value. This method supports such transformations. By default, no transformation will occur.
-     * @return Transformer object
-     */
-    public AbstractDependentVariableTransformer GetDependentVariableTransformer() throws Exception
-    {
-        String configKey = "DEPENDENT_VARIABLE_TRANSFORMER";
-
-        if (Singletons.Config.HasConfigValue(configKey))
-            return (AbstractDependentVariableTransformer) MiscUtilities.InstantiateClassFromText(Singletons.Config.GetStringValue(configKey, ""));
-        else
-            return new SimpleDependentVariableTransformer();
-    }
-
-    /** This method performs the work of transforming dependent variable instances for a given cross validation fold.
-     *
-     * @param dependentVariableInstances Raw dependent variable instances
-     * @return Transformed data instances
-     * @throws Exception
-     */
-    public DataInstanceCollection TransformDependentVariableInstances(DataInstanceCollection dependentVariableInstances) throws Exception
-    {
-        DataInstanceCollection transformed = dependentVariableInstances.Clone();
-        AbstractDependentVariableTransformer transformer = GetDependentVariableTransformer();
-
-        for (DataValues dependentVariableInstance : transformed)
-            transformed.UpdateDataPoint(DataPointName, dependentVariableInstance.GetID(), transformer.TransformDependentVariableValue(dependentVariableInstance.GetDataPointValue(DataPointName)));
-
-        return transformed;
-    }
-
     /** This method saves basic statistical information about the transformed data used by this processor.
      *
      * @return Whether values were saved to the file system successfully
@@ -89,11 +57,11 @@ public class DependentVariableDataProcessor extends AbstractDataProcessor
     {
         super.SaveStatistics();
 
-        ArrayList<String> dependentVariableValues = Singletons.InstanceVault.TransformedDependentVariableInstances.GetDataPointValues(DataPointName).GetAllValues();
+        ArrayList<String> dependentVariableValues = new ArrayList<String>(Singletons.InstanceVault.DependentVariableInstances.values());
 
         ArrayList<NameValuePair> statistics = new ArrayList<NameValuePair>();
 
-        for (String dependentVariableClass : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
             int numInstancesThisClass = ListUtilities.GetNumMatches(dependentVariableValues, dependentVariableClass);
             double proportionInstancesThisClass = numInstancesThisClass / (double)dependentVariableValues.size();

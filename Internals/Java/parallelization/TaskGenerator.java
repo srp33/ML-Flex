@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -435,7 +435,8 @@ public class TaskGenerator
             {
                 public Object call() throws Exception
                 {
-                    new AnalysisFileCreator(Settings.GetOutputExportDir(), processor.GetDescription(), Singletons.InstanceVault.GetInstancesForAnalysis(processor), null, true).CreateArffFile();
+                	DataInstanceCollection instances = Singletons.InstanceVault.GetInstancesForAnalysis(processor);
+                    new AnalysisFileCreator(Settings.GetOutputExportDir(), processor.GetDescription(), instances, null, true, instances.GetDataPointNames()).CreateArffFile();
                     return Boolean.TRUE;
                 }
             }));

@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -54,7 +54,7 @@ public class Main
             System.exit(0); // Not sure if this is necessary, but keeping it just in case
         }
     }
-
+    
     /** Initializes the log files and the logging objects so they can be used through the application.
      *
      * @param args Command-line arguments

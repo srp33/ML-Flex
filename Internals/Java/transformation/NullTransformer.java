@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -19,16 +19,16 @@
 // You should have received a copy of the GNU General Public License
 // along with ML-Flex. If not, see <http://www.gnu.org/licenses/>.
 
-package mlflex.transformation;
-
-/** This class is used when no transformation is required on the data value.
- * @author Stephen Piccolo
- */
-public class NullTransformer extends AbstractTransformer
-{
-    @Override
-    protected String Transform(String value) throws Exception
-    {
-        return value;
-    }
-}
+//package mlflex.transformation;
+//
+///** This class is used when no transformation is required on the data value.
+// * @author Stephen Piccolo
+// */
+//public class NullTransformer extends AbstractTransformer
+//{
+//    @Override
+//    protected String Transform(String value) throws Exception
+//    {
+//        return value;
+//    }
+//}

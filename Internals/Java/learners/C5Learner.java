@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -24,8 +24,7 @@ package mlflex.learners;
 import mlflex.core.*;
 import mlflex.helper.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 
 /** This class provides functionality for interfacing with the C5.0 Decision Trees software package.
  * @author Stephen Piccolo
@@ -39,14 +38,14 @@ public class C5Learner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> parameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> parameters, DataInstanceCollection trainingData, DataInstanceCollection testData, ArrayList<String> features) throws Exception
     {
         String uniqueID = MiscUtilities.GetUniqueID();
 
         // Create input files for C5
-        new AnalysisFileCreator(Settings.TEMP_DATA_DIR, uniqueID, trainingData, trainingData, true).CreateC5NamesFile();
-        new AnalysisFileCreator(Settings.TEMP_DATA_DIR, uniqueID, trainingData, trainingData, true).CreateC5TrainDataFile();
-        new AnalysisFileCreator(Settings.TEMP_DATA_DIR, uniqueID, testData, trainingData, true).CreateC5TestDataFile();
+        new AnalysisFileCreator(Settings.TEMP_DATA_DIR, uniqueID, trainingData, trainingData, true, features).CreateC5NamesFile();
+        new AnalysisFileCreator(Settings.TEMP_DATA_DIR, uniqueID, trainingData, trainingData, true, features).CreateC5TrainDataFile();
+        new AnalysisFileCreator(Settings.TEMP_DATA_DIR, uniqueID, testData, trainingData, true, features).CreateC5TestDataFile();
 
         String inputPath = Settings.TEMP_DATA_DIR + uniqueID;
 
@@ -78,16 +77,16 @@ public class C5Learner extends AbstractMachineLearner
             String prediction = outputLines.get(i).split("\\s+")[3];
             double confidence = Double.parseDouble(outputLines.get(i).split("\\s+")[4].replace("[", "").replace("]", ""));
 
-            DataValues instance = testData.Get(testDataIDs.get(i));
+            String instanceID = testDataIDs.get(i);
 
-            ArrayList<String> dependentVariableOptions = Singletons.InstanceVault.TransformedDependentVariableOptions;
+            ArrayList<String> dependentVariableOptions = Singletons.InstanceVault.DependentVariableOptions;
             ArrayList<Double> classProbabilities = new ArrayList<Double>();
 
             //It uses the confidence value assigned by C5.0 for the predicted class and splits the remaining confidence equally across the other classes (for lack of a better solution).
             for (String dependentVariableValue : dependentVariableOptions)
                 classProbabilities.add(prediction.equals(dependentVariableValue) ? confidence : ((1 - confidence) / ((double)(dependentVariableOptions.size()-1))));
 
-            predictions.add(new Prediction(instance.GetID(), Singletons.InstanceVault.GetTransformedDependentVariableValue(instance.GetID()), prediction, classProbabilities));
+            predictions.add(new Prediction(instanceID, Singletons.InstanceVault.GetDependentVariableValue(instanceID), prediction, classProbabilities));
         }
 
         return new ModelPredictions(CommandLineClient.GetCommandResult(results, CommandLineClient.STANDARD_OUT_KEY), new Predictions(predictions));

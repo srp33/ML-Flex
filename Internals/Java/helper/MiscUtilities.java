@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -22,12 +22,12 @@
 package mlflex.helper;
 
 import mlflex.core.DataInstanceCollection;
-import mlflex.core.DataValues;
 import mlflex.core.Settings;
 import mlflex.core.Singletons;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 
 /** This class contains general-purpose helper methods that are used in various places throughout the code. It also contains Singleton objects (those that are instantiated only once and stored as static variables).
@@ -231,39 +231,48 @@ public class MiscUtilities
         return modString;
     }
 
-    /** This method can be used to convert data points that have more than two possible values into a series of binary data points.
-     *
-     * @param instances Data instances to be converted
-     * @return Converted data instances
-     * @throws Exception
-     */
-    public static DataInstanceCollection ConvertMultiValuedDataPointsToBinary(DataInstanceCollection instances) throws Exception
-    {
-        DataInstanceCollection modInstances = new DataInstanceCollection();
-
-        for (String dataPointName : instances.GetDataPointNames())
-        {
-            ArrayList<String> uniqueDataPointValues = instances.GetUniqueValues(dataPointName);
-
-            for (DataValues instance : instances)
-            {
-                DataValues newInstance = instance.CopyStructure();
-
-                if (uniqueDataPointValues.size() <= 2)
-                    newInstance.AddDataPoint(dataPointName, instance.GetDataPointValue(dataPointName));
-                else
-                {
-                    if (DataTypeUtilities.HasOnlyNumeric(uniqueDataPointValues))
-                        newInstance.AddDataPoint(dataPointName, instance.GetDataPointValue(dataPointName));
-                    else
-                        for (String dataPointValueOption : uniqueDataPointValues)
-                            newInstance.AddBinaryDataPoint(dataPointName + "_" + dataPointValueOption, instance.GetDataPointValue(dataPointName), dataPointValueOption);
-                }
-
-                modInstances.Add(newInstance);
-            }
-        }
-
-        return modInstances;
-    }
+//    /** This method can be used to convert data points that have more than two possible values into a series of binary data points.
+//     *
+//     * @param instances Data instances to be converted
+//     * @return Converted data instances
+//     * @throws Exception
+//     */
+//    public static DataInstanceCollection ConvertMultiValuedDataPointsToBinary(DataInstanceCollection instances) throws Exception
+//    {
+//        DataInstanceCollection modInstances = new DataInstanceCollection();
+//
+//        for (String dataPointName : instances.GetDataPointNames())
+//        {
+//            ArrayList<String> uniqueDataPointValues = instances.GetUniqueValues(dataPointName);
+//
+//            for (String instanceID : instances)
+//            {
+//            	HashMap<String, String> newInstance = new HashMap<String, String>();
+//                //DataValues newInstance = instance.CopyStructure();
+//
+//                if (uniqueDataPointValues.size() <= 2)
+//                    newInstance.put(dataPointName, instances.GetDataPointValue(instanceID, dataPointName));
+//                else
+//                {
+//                    if (DataTypeUtilities.HasOnlyNumeric(uniqueDataPointValues))
+//                        newInstance.put(dataPointName, instances.GetDataPointValue(instanceID, dataPointName));
+//                    else
+//                        for (String dataPointValueOption : uniqueDataPointValues)
+//                            AddBinaryDataPoint(newInstance, dataPointName + "_" + dataPointValueOption, instances.GetDataPointValue(instanceID, dataPointName), dataPointValueOption);
+//                }
+//
+//                modInstances.Add(instanceID, newInstance);
+//            }
+//        }
+//
+//        return modInstances;
+//    }
+//    
+//    public static void AddBinaryDataPoint(HashMap<String, String> instanceMap, String name, String value, String oneOption) 
+//    { 
+//        if (MiscUtilities.IsMissing(value)) 
+//            instanceMap.put(name, Settings.MISSING_VALUE_STRING); 
+//        else 
+//            instanceMap.put(name, value.equals(oneOption) ? "1" : "0"); 
+//    } 
 }

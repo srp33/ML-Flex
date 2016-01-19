@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -23,8 +23,8 @@ package mlflex.core;
 
 import mlflex.summarization.AbstractSummarizer;
 import mlflex.summarization.GetFirstSummarizer;
-import mlflex.transformation.AbstractTransformer;
-import mlflex.transformation.NullTransformer;
+//import mlflex.transformation.AbstractTransformer;
+//import mlflex.transformation.NullTransformer;
 import mlflex.helper.ListUtilities;
 
 import java.util.*;
@@ -36,7 +36,7 @@ public class DataValueMeta
 {
     public String Name;
     public AbstractSummarizer Summarizer;
-    public AbstractTransformer Transformer;
+    //public AbstractTransformer Transformer;
     public ArrayList<String> NullValues;
 
     /** Constructor. By default, the first value is used (when multiple values have been specified), and no transformation occurs.
@@ -45,7 +45,7 @@ public class DataValueMeta
      */
     public DataValueMeta(String name)
     {
-        this(name, new GetFirstSummarizer(), new NullTransformer());
+        this(name, new GetFirstSummarizer());
     }
 
     /** Constructor.
@@ -55,11 +55,11 @@ public class DataValueMeta
      * @param transformer Data transformer
      * @param nullValues Which values are considered to be null/missing
      */
-    public DataValueMeta(String name, AbstractSummarizer summarizer, AbstractTransformer transformer, String... nullValues)
+    public DataValueMeta(String name, AbstractSummarizer summarizer, String... nullValues)
     {
         Name = name;
         Summarizer = summarizer;
-        Transformer = transformer;
+        //Transformer = transformer;
         NullValues = ListUtilities.CreateStringList(nullValues);
     }
 

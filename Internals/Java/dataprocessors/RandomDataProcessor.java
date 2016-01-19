@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -22,7 +22,6 @@
 package mlflex.dataprocessors;
 
 import mlflex.core.DataInstanceCollection;
-import mlflex.core.DataValues;
 import mlflex.core.Singletons;
 import mlflex.helper.ListUtilities;
 import mlflex.helper.MathUtilities;
@@ -72,7 +71,7 @@ public class RandomDataProcessor extends AbstractDataProcessor
     }
 
     @Override
-    public DataInstanceCollection GetTransformedInstances() throws Exception
+    public DataInstanceCollection GetDataInstances() throws Exception
     {
         ArrayList<String> discreteDataPoints = GenerateDataPointNames(_numDiscreteDataPoints, "D");
         ArrayList<String> continuousDataPoints = GenerateDataPointNames(_numContinuousDataPoints, "C");
@@ -80,17 +79,15 @@ public class RandomDataProcessor extends AbstractDataProcessor
 
         for (int i=0; i<_numInstances; i++)
         {
-            DataValues dv = new DataValues("ID" + i);
+        	String instanceID = "ID" + i;
 
             for (String dataPointName : discreteDataPoints)
-                dv.AddDataPoint(dataPointName, GenerateRandomDiscreteValue());
+                instances.Add(dataPointName, instanceID, GenerateRandomDiscreteValue());
 
             for (String dataPointName : continuousDataPoints)
-                dv.AddDataPoint(dataPointName, String.valueOf(GenerateRandomContinuousValue()));
+                instances.Add(dataPointName, instanceID, String.valueOf(GenerateRandomContinuousValue()));
 
-            dv.AddDataPoint("Class", GenerateRandomDiscreteValue());
-
-            instances.Add(dv);
+            instances.Add("Class", instanceID, GenerateRandomDiscreteValue());
 
             if (i > 0 && i % 100 == 0)
                 Singletons.Log.Debug("Generating random data instances: " + i);

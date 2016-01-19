@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -40,15 +40,15 @@ public class RLearner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainingData, DataInstanceCollection testData, ArrayList<String> features) throws Exception
     {
         CheckDataTypes(trainingData, testData);
 
         // Create training data file that will be used as input
-        String trainingFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "RTrain_" + MiscUtilities.GetUniqueID(), trainingData, testData, true).CreateTransposedTabDelimitedFile(false).GetTransposedTabDelimitedFilePath();
+        String trainingFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "RTrain_" + MiscUtilities.GetUniqueID(), trainingData, testData, true, features).CreateTransposedTabDelimitedFile(false).GetTransposedTabDelimitedFilePath();
 
         // Create test data file that will be used as input
-        String testFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "RTest_" + MiscUtilities.GetUniqueID(), testData, trainingData, false).CreateTransposedTabDelimitedFile(false).GetTransposedTabDelimitedFilePath();
+        String testFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, "RTest_" + MiscUtilities.GetUniqueID(), testData, trainingData, false, features).CreateTransposedTabDelimitedFile(false).GetTransposedTabDelimitedFilePath();
 
         // Create output directory
         String outputDirectoryPath = Settings.TEMP_RESULTS_DIR + MiscUtilities.GetUniqueID() + "/";
@@ -86,7 +86,7 @@ Singletons.Log.Debug(outputText);
 Singletons.Log.Debug("headerItems:");
 Singletons.Log.Debug(headerItems);
 
-        for (DataValues testInstance : testData)
+        for (String testInstanceID : testData)
         {
             ArrayList<String> outputItems = ListUtilities.CreateStringList(outputLines.remove(0).split("\t"));
             String predictedClass = outputItems.get(0);
@@ -95,13 +95,13 @@ Singletons.Log.Debug("outputItems:");
 Singletons.Log.Debug(outputItems);
             
             ArrayList<Double> classProbabilities = new ArrayList<Double>();
-            for (String dependentVariableValue : Singletons.InstanceVault.TransformedDependentVariableOptions)
+            for (String dependentVariableValue : Singletons.InstanceVault.DependentVariableOptions)
             {
 Singletons.Log.Debug(dependentVariableValue);
                 classProbabilities.add(Double.parseDouble(outputItems.get(headerItems.indexOf(dependentVariableValue))));
             }
 
-            predictions.add(new Prediction(testInstance.GetID(), Singletons.InstanceVault.GetTransformedDependentVariableValue(testInstance.GetID()), predictedClass, classProbabilities));
+            predictions.add(new Prediction(testInstanceID, Singletons.InstanceVault.GetDependentVariableValue(testInstanceID), predictedClass, classProbabilities));
         }
         
 //        for (int i=0; i<testData.Size(); i++)

@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -22,14 +22,18 @@
 package mlflex.core;
 
 import mlflex.Action;
+import mlflex.dataprocessors.AbstractDataProcessor;
 import mlflex.helper.Config;
 import mlflex.helper.FileUtilities;
+import mlflex.helper.MapUtilities;
 import mlflex.helper.Vacuum;
 import mlflex.parallelization.LockedCallable;
 import mlflex.parallelization.MultiThreadedTaskHandler;
 import mlflex.parallelization.TaskGenerator;
 
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.Callable;
 
 /** This class contains high-level commands for executing tasks within a given experiment. It makes sure steps are performed in the correct order and verifies that all prerequisite steps are performed before moving to the next step.
  *
@@ -64,27 +68,36 @@ public class Experiment
 
             return;
         }
-
+        
         // Short circuit the current iteration of the experiment if it has already been completed
         if (IsIterationComplete())
         {
             PrintIterationCompleteMessage();
             return;
         }
-
+        
         // Set and save random seed so that all nodes use the same random seed for each iteration.
         SetRandomSeed();
 
         // The following steps prepare the data that will be used for a given experiment. Because the same data will be used in all iterations, these steps need only be performed on the first iteration.
         if (Config.IsFirstIteration())
-            ProcessRawAnalysisData();
+        {
+            for (AbstractDataProcessor processor : Singletons.ProcessorVault.IndependentVariableDataProcessors)
+                 processor.ProcessInputData();
+        }
 
         // Load data into memory before performing evaluation steps
-        Singletons.InstanceVault.LoadDataInstancesIntoMemory();
-
+        Singletons.InstanceVault.PrepareDataInstances();
+        
+        if (Singletons.Config.GetBooleanValue("PERMUTE_DEPENDENT_VARIABLE_VALUES", "false")) 
+        { 
+            Singletons.Log.Debug("Permuting class labels");
+            Singletons.InstanceVault.DependentVariableInstances = MapUtilities.PermuteIDs(Singletons.InstanceVault.DependentVariableInstances, new Random(Singletons.RandomSeed)); 
+        }
+        
         // Initialize cross-validation assignments
         Singletons.InstanceVault.GetCrossValidationAssignments(true);
-
+        
         if (Config.IsFirstIteration())
         {
             // This saves summary information about the data
@@ -176,14 +189,14 @@ public class Experiment
         Singletons.RandomSeed = Long.parseLong(FileUtilities.ReadScalarFromFile(randomSeedFilePath));
     }
 
-    /** Parses and filters and saves all raw analysis data into the ML-Flex native format.
-     *
-     * @throws Exception
-     */
-    private void ProcessRawAnalysisData() throws Exception
-    {
-        MultiThreadedTaskHandler.ExecuteLockTasks("Process raw analysis data", TaskGenerator.GetProcessRawAnalysisDataTasks());
-    }
+//    /** Parses and filters and saves all raw analysis data into the ML-Flex native format.
+//     *
+//     * @throws Exception
+//     */
+//    private void ProcessRawAnalysisData() throws Exception
+//    {
+//        MultiThreadedTaskHandler.ExecuteLockTasks("Process raw analysis data", TaskGenerator.GetProcessRawAnalysisDataTasks());
+//    }
 
     /** Saves files that describe the experiment being executed. These files indicate experiment and configuration settings, cross-validation assignments, etc.
      *

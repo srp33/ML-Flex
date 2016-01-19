@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -22,6 +22,7 @@
 package mlflex.ensemblelearners;
 
 import mlflex.core.*;
+import mlflex.helper.ListUtilities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +48,7 @@ public class StackedEnsembleLearner extends AbstractEnsembleLearner
     @Override
     protected Predictions MakeInstancePredictions(HashMap<String, EnsemblePredictionInfos> ensemblePredictionInfoMap) throws Exception
     {
-        ArrayList<String> dependentVariableClasses = Singletons.InstanceVault.TransformedDependentVariableOptions;
+        ArrayList<String> dependentVariableClasses = Singletons.InstanceVault.DependentVariableOptions;
 
         DataInstanceCollection trainData = new DataInstanceCollection();
         DataInstanceCollection testData = new DataInstanceCollection();
@@ -91,7 +92,7 @@ public class StackedEnsembleLearner extends AbstractEnsembleLearner
         }
 
         // Make the predictions using the second-level classifier
-        return Singletons.Config.GetStackingClassificationAlgorithm().TrainTest(trainData, testData, Singletons.InstanceVault.TransformedDependentVariableInstances).Predictions;
+        return Singletons.Config.GetStackingClassificationAlgorithm().TrainTest(trainData, testData, Singletons.InstanceVault.DependentVariableInstances, ListUtilities.Intersect(trainData.GetDataPointNames(), testData.GetDataPointNames())).Predictions;
     }
 
     private String FormatName(String name)

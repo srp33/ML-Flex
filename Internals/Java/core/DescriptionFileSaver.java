@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -79,7 +79,7 @@ public class DescriptionFileSaver
         FileUtilities.WriteTextToFile(outerFoldsFilePath, "# The outer cross-validation fold to which each data instance was assigned.\n");
         FileUtilities.AppendTextToFile(outerFoldsFilePath, Singletons.InstanceVault.GetCrossValidationAssignments().toString());
 
-        if (Singletons.InstanceVault.GetCrossValidationAssignments().NumFolds != Singletons.InstanceVault.TransformedDependentVariableInstances.Size())
+        if (Singletons.InstanceVault.GetCrossValidationAssignments().NumFolds != Singletons.InstanceVault.DependentVariableInstances.size())
             for (int outerFold : Singletons.InstanceVault.GetCrossValidationAssignments().GetAllFoldNumbers())
             {
                 String innerFoldFilePath = Settings.GetOutputSettingsDir(true) + "Validation_Assignments_for_Inner_Folds_in_OuterFold_" + outerFold + ".txt";

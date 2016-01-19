@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -24,7 +24,6 @@ package mlflex.dataprocessors;
 
 // These import statements allow us to use other Java classes besides this one
 import mlflex.core.DataInstanceCollection;
-import mlflex.core.DataValues;
 import mlflex.helper.MathUtilities;
 import java.util.Random;
 
@@ -49,29 +48,29 @@ public class ExampleDataProcessor extends AbstractDataProcessor
                 SaveRawDataPoint(dataPoint, instanceID, String.valueOf(new Random().nextDouble()));
     }
 
-    /** After the raw data are processed and stored, various transformations can be applied to the data before it is used for machine-learning analyses. Implementing this method is one way to perform such transformations. In this example, the values are transformed to the log-2 scale. */
-    @Override
-    protected DataInstanceCollection TransformInstances(DataInstanceCollection rawInstances) throws Exception
-    {
-        // Loop through the data instances
-        for (DataValues instance : rawInstances)
-            // Loop through the data points for each instance
-            for (String dataPoint : instance.GetDataPointNames())
-            {
-                // Retrieve the raw value
-                String rawValue = instance.GetDataPointValue(dataPoint);
-
-                // Convert the raw value to a numeric value
-                double numericValue = Double.valueOf(rawValue);
-
-                // Perform a log-2 transformation
-                double transformedValue = MathUtilities.Log2(numericValue);
-
-                // Update the values in the collection
-                instance.UpdateDataPoint(dataPoint, String.valueOf(transformedValue));
-            }
-
-        // Return the collection of data in transformed form
-        return rawInstances;
-    }
+//    /** After the raw data are processed and stored, various transformations can be applied to the data before it is used for machine-learning analyses. Implementing this method is one way to perform such transformations. In this example, the values are transformed to the log-2 scale. */
+//    @Override
+//    protected DataInstanceCollection TransformInstances(DataInstanceCollection rawInstances) throws Exception
+//    {
+//        // Loop through the data instances
+//        for (DataValues instance : rawInstances)
+//            // Loop through the data points for each instance
+//            for (String dataPoint : instance.GetDataPointNames())
+//            {
+//                // Retrieve the raw value
+//                String rawValue = instance.GetDataPointValue(dataPoint);
+//
+//                // Convert the raw value to a numeric value
+//                double numericValue = Double.valueOf(rawValue);
+//
+//                // Perform a log-2 transformation
+//                double transformedValue = MathUtilities.Log2(numericValue);
+//
+//                // Update the values in the collection
+//                instance.UpdateDataPoint(dataPoint, String.valueOf(transformedValue));
+//            }
+//
+//        // Return the collection of data in transformed form
+//        return rawInstances;
+//    }
 }

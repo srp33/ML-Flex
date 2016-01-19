@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -41,7 +41,7 @@ public class TrainTestValidationAssignments extends CrossValidationAssignments
      * @param IsInner Whether this is for an inner/nested fold
      * @throws Exception
      */
-    public TrainTestValidationAssignments(HashMap<Integer, ArrayList<String>> assignments, DataInstanceCollection dependentVariableInstances, boolean IsInner) throws Exception
+    public TrainTestValidationAssignments(HashMap<Integer, ArrayList<String>> assignments, HashMap<String, String> dependentVariableInstances, boolean IsInner) throws Exception
     {
         super(2, dependentVariableInstances, IsInner);
         Assignments = assignments;
@@ -99,7 +99,13 @@ public class TrainTestValidationAssignments extends CrossValidationAssignments
     public CrossValidationAssignments GetInnerAssignments(int outerFold) throws Exception
     {
         if (_innerAssignments == null)
-            _innerAssignments = new CrossValidationAssignments(Singletons.Config.GetNumInnerCrossValidationFolds(), DependentVariableInstances.Get(GetTrainIDs(1)), true).AssignFolds();
+        {
+        	HashMap<String, String> instanceMap = new HashMap<String, String>();
+        	for (String instanceID : GetTrainIDs(1))
+        		instanceMap.put(instanceID, Singletons.InstanceVault.GetDependentVariableValue(instanceID));
+        	
+            _innerAssignments = new CrossValidationAssignments(Singletons.Config.GetNumInnerCrossValidationFolds(), instanceMap, true).AssignFolds();
+        }
 
         return _innerAssignments;
     }

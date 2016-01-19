@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -51,7 +51,7 @@ public class MajorityVoteEnsembleLearner extends AbstractEnsembleLearner
 
         // Find out how many predictions were made for each class
         ArrayList<Double> numClassPredictions = new ArrayList<Double>();
-        for (String x : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String x : Singletons.InstanceVault.DependentVariableOptions)
             numClassPredictions.add((double)predictions.GetNumMatchingPredictedClasses(x));
 
         // Choose a winner
@@ -59,13 +59,13 @@ public class MajorityVoteEnsembleLearner extends AbstractEnsembleLearner
 
         // Calculate probabilities based on the counts
         ArrayList<Double> classProbabilities = new ArrayList<Double>();
-        for (String x : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String x : Singletons.InstanceVault.DependentVariableOptions)
         {
             double numPredictions = (double)predictions.GetNumMatchingPredictedClasses(x);
             classProbabilities.add(numPredictions / (double)predictions.Size());
         }
 
-        Prediction prediction = new Prediction(instanceID, Singletons.InstanceVault.GetTransformedDependentVariableValue(instanceID), predictedClass, classProbabilities);
+        Prediction prediction = new Prediction(instanceID, Singletons.InstanceVault.GetDependentVariableValue(instanceID), predictedClass, classProbabilities);
         
         return new ModelPrediction(GetDescription(predictedClass, classProbabilities), prediction);
     }
@@ -79,7 +79,7 @@ public class MajorityVoteEnsembleLearner extends AbstractEnsembleLearner
      */
     public static String GetDescription(String predictedClass, ArrayList<Double> classProbabilities) throws Exception
     {
-        ArrayList<String> classes = Singletons.InstanceVault.TransformedDependentVariableOptions;
+        ArrayList<String> classes = Singletons.InstanceVault.DependentVariableOptions;
 
         String description = "";
         for (int i=0; i<classes.size(); i++)
@@ -98,7 +98,7 @@ public class MajorityVoteEnsembleLearner extends AbstractEnsembleLearner
      */
     public static String ChoosePredictedClass(String instanceID, ArrayList<Double> dependentVariableSummaryValues) throws Exception
     {
-        ArrayList<String> classes = Singletons.InstanceVault.TransformedDependentVariableOptions;
+        ArrayList<String> classes = Singletons.InstanceVault.DependentVariableOptions;
 
         ArrayList<Integer> indicesOfMaxValues = ListUtilities.GetIndices(dependentVariableSummaryValues, MathUtilities.Max(dependentVariableSummaryValues));
 

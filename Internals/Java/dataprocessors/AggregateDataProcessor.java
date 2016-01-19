@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -47,7 +47,7 @@ public class AggregateDataProcessor extends AbstractDataProcessor
     }
 
     @Override
-    public DataInstanceCollection GetTransformedInstances() throws Exception
+    public DataInstanceCollection GetDataInstances() throws Exception
     {
         DataInstanceCollection instances = new DataInstanceCollection();
 
@@ -55,12 +55,13 @@ public class AggregateDataProcessor extends AbstractDataProcessor
         {
             if (!(processor instanceof AggregateDataProcessor))
             {
-                DataInstanceCollection processorInstances = Singletons.InstanceVault.GetInstancesForAnalysis(processor);
-
-                if (processorInstances != null)
+                for (String instanceID : Singletons.InstanceVault.GetInstancesForAnalysis(processor))
                 {
-                    processorInstances.PrefixDataPointNames(processor.GetDescription());
-                    instances.Add(processorInstances);
+                	for (String dataPointName : Singletons.InstanceVault.GetInstancesForAnalysis(processor).GetDataPointNames())
+                	{
+                		String newDataPointName = processor.GetDescription() + "_" + dataPointName;
+                		instances.Add(newDataPointName, instanceID, Singletons.InstanceVault.GetInstancesForAnalysis(processor).GetDataPointValue(instanceID, dataPointName));
+                	}
                 }
             }
         }

@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -111,7 +111,10 @@ public class FileUtilities
     public static void WriteLinesToFile(String filePath, ArrayList<ArrayList<String>> rows, String headerComment) throws Exception
     {
         if (rows == null)
+        {
+        	Singletons.Log.Debug("The object to be saved to " + filePath + " was null.");
             return;
+        }
 
         StringBuffer output = new StringBuffer();
 

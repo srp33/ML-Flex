@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -53,7 +53,7 @@ public class MeanProbabilityEnsembleLearner extends AbstractEnsembleLearner
     protected ModelPrediction MakeInstancePrediction(String instanceID, EnsemblePredictionInfos combinedPredictionInfos) throws Exception
     {
         ArrayList<Double> classProbabilities = new ArrayList<Double>();
-        ArrayList<String> classes = Singletons.InstanceVault.TransformedDependentVariableOptions;
+        ArrayList<String> classes = Singletons.InstanceVault.DependentVariableOptions;
 
         // Set default values for the combined probabilities
         for (String x : classes)
@@ -81,7 +81,7 @@ public class MeanProbabilityEnsembleLearner extends AbstractEnsembleLearner
             classProbabilities.set(i, classProbabilities.get(i) / totalProbability);
 
         // Construct the ensemble prediction
-        Prediction prediction = new Prediction(instanceID, Singletons.InstanceVault.GetTransformedDependentVariableValue(instanceID), predictedClass, classProbabilities);
+        Prediction prediction = new Prediction(instanceID, Singletons.InstanceVault.GetDependentVariableValue(instanceID), predictedClass, classProbabilities);
 
         return new ModelPrediction(MajorityVoteEnsembleLearner.GetDescription(predictedClass, classProbabilities), prediction);
     }

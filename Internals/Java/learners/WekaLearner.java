@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -43,7 +43,7 @@ public class WekaLearner extends AbstractMachineLearner
     public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         // Create an ARFF file with the training data
-        String arffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, null, true).CreateArffFile().GetArffFilePath();
+        String arffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, null, true, trainData.GetDataPointNames()).CreateArffFile().GetArffFilePath();
 
         // Replace token to indicate path to input file
         String command = commandTemplate.replace("{INPUT_TRAINING_FILE}", arffFilePath);
@@ -79,13 +79,13 @@ public class WekaLearner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData, DataInstanceCollection testData, ArrayList<String> features) throws Exception
     {
         Singletons.Log.Debug("Create ARFF file for training data");
-        String trainingArffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, testData, true).CreateArffFile().GetArffFilePath();
+        String trainingArffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), trainData, testData, true, features).CreateArffFile().GetArffFilePath();
 
         Singletons.Log.Debug("Create ARFF file for test data");
-        String testArffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), testData, trainData, true).CreateArffFile().GetArffFilePath();
+        String testArffFilePath = new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), testData, trainData, true, features).CreateArffFile().GetArffFilePath();
 
         Singletons.Log.Debug("Replace tokens to indicate paths to input files");
         String command = commandTemplate.replace("{INPUT_TRAINING_FILE}", trainingArffFilePath);
@@ -144,10 +144,10 @@ public class WekaLearner extends AbstractMachineLearner
                 rawProbabilitiesList.set(predictedClassIndex, rawProbabilitiesList.get(predictedClassIndex).substring(1));
 
                 ArrayList<Double> probabilities = ListUtilities.CreateDoubleList(rawProbabilitiesList);
-                String predictedClass = Singletons.InstanceVault.TransformedDependentVariableOptions.get(predictedClassIndex);
+                String predictedClass = Singletons.InstanceVault.DependentVariableOptions.get(predictedClassIndex);
 
                 String testInstanceID = testInstanceIDs.get(i);
-                predictions.add(new Prediction(testInstanceID, Singletons.InstanceVault.GetTransformedDependentVariableValue(testInstanceID), predictedClass, probabilities));
+                predictions.add(new Prediction(testInstanceID, Singletons.InstanceVault.GetDependentVariableValue(testInstanceID), predictedClass, probabilities));
             }
 
             return new ModelPredictions(output, new Predictions(predictions));
@@ -158,75 +158,96 @@ public class WekaLearner extends AbstractMachineLearner
             throw ex;
         }
     }
+    
+    /** Creates a custom object that can use the Weka library to calculate many of the performance metrics.
+    *
+    * @param predictions List of predictions that have been made
+    * @return Custom object that uses the Weka library to calculate performance metrics
+    * @throws Exception
+    */
+    public CustomWekaEvaluation GetWekaEvaluation(Predictions predictions) throws Exception
+    {
+    	Singletons.Log.Debug("Get Weka data instances");
+    	Instances wekaInstances = GetEvaluationInstances(predictions);
+
+    	Singletons.Log.Debug("Create custom weka evaluation object");
+    	CustomWekaEvaluation evaluation = new CustomWekaEvaluation(wekaInstances);
+
+    	Singletons.Log.Debug("Add instance predictions");
+    	ArrayList<String> instanceIDs = new ArrayList<String>();
+    	for (Prediction prediction : predictions.GetAll())
+    		instanceIDs.add(prediction.InstanceID);
+    	
+    	for (int i=0; i<instanceIDs.size(); i++)
+    	{
+    		if (predictions.HasPrediction(instanceIDs.get(0)))
+    			evaluation.AddInstancePrediction(wekaInstances.instance(i), predictions.Get(instanceIDs.get(i)));
+    	}
+       
+       return evaluation;
+   }
 
     /** Creates Weka instances from ML-Flex collections.
      *
-     * @param dataInstances ML-Flex collection of dataInstances
+     * @param dependentVariableInstances ML-Flex collection of dataInstances
      * @return Weka instances
      * @throws Exception
      */
-    private static Instances GetInstances(DataInstanceCollection dataInstances) throws Exception
+    private static Instances GetEvaluationInstances(Predictions predictions) throws Exception
     {
-        FastVector wekaAttributeVector = GetAttributeVector(dataInstances);
+        FastVector wekaAttributeVector = GetAttributeVector(predictions);
 
-        Instances wekaInstances = new Instances("DataSet", wekaAttributeVector, dataInstances.Size());
-        wekaInstances.setClass((Attribute)wekaAttributeVector.elementAt(wekaAttributeVector.size()-1));
+        Instances wekaInstances = new Instances("DataSet", wekaAttributeVector, predictions.Size());
+        wekaInstances.setClass((Attribute)wekaAttributeVector.elementAt(1));
 
-        for (DataValues dataInstance : dataInstances)
-            wekaInstances.add(GetInstance(wekaInstances, dataInstance, wekaAttributeVector));
+        for (Prediction prediction : predictions.GetAll())
+            wekaInstances.add(GetInstance(wekaInstances, wekaAttributeVector, prediction));
 
         return wekaInstances;
     }
 
-    private static Instance GetInstance(Instances wekaInstances, DataValues dataInstance, FastVector wekaAttributeVector) throws Exception
+    private static Instance GetInstance(Instances wekaInstances, FastVector wekaAttributeVector, Prediction prediction) throws Exception
     {
         Instance wekaInstance = new Instance(wekaAttributeVector.size());
         wekaInstance.setDataset(wekaInstances);
 
-        for (int i=0; i< wekaAttributeVector.size()-1; i++)
-        {
-            Attribute attribute = (Attribute) wekaAttributeVector.elementAt(i);
-            String dataPointValue = dataInstance.GetDataPointValue(attribute.name());
-
-            SetAttributeValue(wekaInstance, attribute, dataPointValue);
-        }
-
-        SetAttributeValue(wekaInstance, (Attribute) wekaAttributeVector.elementAt(wekaAttributeVector.size() - 1), Singletons.InstanceVault.TransformedDependentVariableInstances.Get(dataInstance.GetID()).GetDataPointValue(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName));
+        wekaInstance.setValue((Attribute)wekaAttributeVector.elementAt(0), prediction.Prediction);
+        wekaInstance.setValue((Attribute)wekaAttributeVector.elementAt(1), prediction.DependentVariableValue);
 
         return wekaInstance;
     }
 
-    private static void SetAttributeValue(Instance wekaInstance, Attribute attribute, String value)
-    {
-        try
-        {
-            if (value.equals(Settings.MISSING_VALUE_STRING))
-            {
-                wekaInstance.setMissing(attribute);
-            }
-            else
-            {
-                if (attribute.isNominal())
-                {
-                    wekaInstance.setValue(attribute, value);
-                }
-                else
-                {
-                    wekaInstance.setValue(attribute, Double.parseDouble(value));
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Singletons.Log.Debug("Data point name: " + attribute.name());
-            Singletons.Log.Debug("Data point value:");
-            Singletons.Log.Debug(value);
-            Singletons.Log.Debug("Is double: " + DataTypeUtilities.IsDouble(value));
-            Singletons.Log.Debug("Is binary: " + DataTypeUtilities.IsBinary(value));
-            Singletons.Log.Debug("Is integer: " + DataTypeUtilities.IsInteger(value));
-            Singletons.Log.ExceptionFatal(ex);
-        }
-    }
+//    private static void SetAttributeValue(Instance wekaInstance, Attribute attribute, String value)
+//    {
+//        try
+//        {
+//            if (MiscUtilities.IsMissing(value))
+//            {
+//                wekaInstance.setMissing(attribute);
+//            }
+//            else
+//            {
+//                if (attribute.isNominal())
+//                {
+//                    wekaInstance.setValue(attribute, value);
+//                }
+//                else
+//                {
+//                    wekaInstance.setValue(attribute, Double.parseDouble(value));
+//                }
+//            }
+//        }
+//        catch (Exception ex)
+//        {
+//            Singletons.Log.Debug("Data point name: " + attribute.name());
+//            Singletons.Log.Debug("Data point value:");
+//            Singletons.Log.Debug(value);
+//            Singletons.Log.Debug("Is double: " + DataTypeUtilities.IsDouble(value));
+//            Singletons.Log.Debug("Is binary: " + DataTypeUtilities.IsBinary(value));
+//            Singletons.Log.Debug("Is integer: " + DataTypeUtilities.IsInteger(value));
+//            Singletons.Log.ExceptionFatal(ex);
+//        }
+//    }
 
     private static FastVector GetAttributeOptions(ArrayList<String> values, boolean sort)
     {
@@ -245,68 +266,28 @@ public class WekaLearner extends AbstractMachineLearner
         return options;
     }
 
-    private static FastVector GetAttributeVector(DataInstanceCollection dataInstances) throws Exception
+    private static FastVector GetAttributeVector(Predictions predictions) throws Exception
     {
         FastVector attVector = new FastVector();
 
-        for (String dataPointName : ListUtilities.SortStringList(dataInstances.GetDataPointNames()))
-        {
-            ArrayList<String> uniqueValuesList = dataInstances.GetUniqueValues(dataPointName);
+        ArrayList<String> predictionValues = new ArrayList<String>();
+        for (Prediction prediction : predictions.GetAll())
+        	predictionValues.add(prediction.Prediction);
+        
+        ArrayList<String> uniquePredictions = ListUtilities.GetUniqueValues(predictionValues);
 
-            if (DataTypeUtilities.HasOnlyBinary(uniqueValuesList))
-                attVector.addElement(new Attribute(dataPointName, GetAttributeOptions(uniqueValuesList, false)));
+        if (DataTypeUtilities.HasOnlyBinary(uniquePredictions))
+            attVector.addElement(new Attribute("Prediction", GetAttributeOptions(uniquePredictions, false)));
+        else
+        {
+            if (DataTypeUtilities.HasOnlyNumeric(uniquePredictions))
+                attVector.addElement(new Attribute("Prediction"));
             else
-            {
-                if (DataTypeUtilities.HasOnlyNumeric(uniqueValuesList))
-                    attVector.addElement(new Attribute(dataPointName));
-                else
-                    attVector.addElement(new Attribute(dataPointName, GetAttributeOptions(uniqueValuesList, false)));
-            }
+                attVector.addElement(new Attribute("Prediction", GetAttributeOptions(uniquePredictions, false)));
         }
 
-        attVector.addElement(new Attribute(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName, GetAttributeOptions(Singletons.InstanceVault.TransformedDependentVariableOptions, true)));
+        attVector.addElement(new Attribute(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName, GetAttributeOptions(Singletons.InstanceVault.DependentVariableOptions, true)));
 
         return attVector;
-    }
-
-    private void SaveWekaInstances(Instances instances, String filePath) throws Exception
-    {
-        ArffSaver saver = new ArffSaver();
-        saver.setInstances(instances);
-        saver.setFile(new java.io.File(filePath));
-        saver.writeBatch();
-
-    }
-
-    /** Creates a custom object that can use the Weka library to calculate many of the performance metrics.
-     *
-     * @param predictions List of predictions that have been made
-     * @return Custom object that uses the Weka library to calculate performance metrics
-     * @throws Exception
-     */
-    public CustomWekaEvaluation GetWekaEvaluation(Predictions predictions) throws Exception
-    {
-    	Singletons.Log.Debug("Get transformed dependent variable instances");
-        DataInstanceCollection dataInstances = Singletons.InstanceVault.TransformedDependentVariableInstances.Get(predictions.GetInstanceIDs()).Clone();
-        dataInstances.RemoveDataPointName(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName);
-
-    	Singletons.Log.Debug("Get Weka data instances");
-        Instances wekaInstances = GetInstances(dataInstances);
-
-    	Singletons.Log.Debug("Create custom weka evaluation object");
-        CustomWekaEvaluation evaluation = new CustomWekaEvaluation(wekaInstances);
-
-    	Singletons.Log.Debug("Add instance predictions");
-    	
-    	ArrayList<String> instanceIDs = dataInstances.GetIDs();
-        for (int i=0; i<dataInstances.Size(); i++)
-        {
-            DataValues dataInstance = dataInstances.Get(instanceIDs.get(i));
-
-            if (predictions.HasPrediction(dataInstance.GetID()))
-                evaluation.AddInstancePrediction(wekaInstances.instance(i), predictions.Get(dataInstance.GetID()));
-        }
-
-        return evaluation;
     }
 }

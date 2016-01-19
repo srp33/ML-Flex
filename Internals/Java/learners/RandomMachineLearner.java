@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -25,6 +25,7 @@ import mlflex.core.*;
 import mlflex.helper.ListUtilities;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 /** This class can be used to randomly select features or to randomly assign instances to a given class. This can be used for validation purposes.
@@ -47,12 +48,12 @@ public class RandomMachineLearner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> classificationParameters, DataInstanceCollection trainingData, DataInstanceCollection testData, ArrayList<String> features) throws Exception
     {
-        DataInstanceCollection testDependentVariableInstances = Singletons.InstanceVault.TransformedDependentVariableInstances.Get(testData.GetIDs());
+        HashMap<String, String> testDependentVariableInstances = Singletons.InstanceVault.GetDependentVariableValues(testData.GetIDs());
         String dependentVariableName = Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName;
 
-        ArrayList<String> randomTestDataDependentVariableValues = ListUtilities.Shuffle(testDependentVariableInstances.GetDataPointValues(dependentVariableName).GetAllValues(), new Random(GenerateRandomSeed(trainingData)));
+        ArrayList<String> randomTestDataDependentVariableValues = ListUtilities.Shuffle(new ArrayList<String>(testDependentVariableInstances.values()), new Random(GenerateRandomSeed(trainingData)));
 
         ArrayList<Prediction> predictions = new ArrayList<Prediction>();
         
@@ -61,10 +62,10 @@ public class RandomMachineLearner extends AbstractMachineLearner
         {
             String instanceID = testDataIDs.get(i);
             String predictedClass = randomTestDataDependentVariableValues.get(i);
-            String actualClass = testDependentVariableInstances.Get(instanceID).GetDataPointValue(dependentVariableName);
+            String actualClass = testDependentVariableInstances.get(instanceID);
 
             ArrayList<Double> classProbabilities = new ArrayList<Double>();
-            for (String dependentVariableValue : Singletons.InstanceVault.TransformedDependentVariableOptions)
+            for (String dependentVariableValue : Singletons.InstanceVault.DependentVariableOptions)
             {
                 if (predictedClass.equals(dependentVariableValue))
                     classProbabilities.add(1.0);

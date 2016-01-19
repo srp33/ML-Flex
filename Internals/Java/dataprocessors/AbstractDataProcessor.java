@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -24,7 +24,7 @@ package mlflex.dataprocessors;
 import mlflex.core.*;
 import mlflex.parallelization.MultiThreadedTaskHandler;
 import mlflex.summarization.GetFirstSummarizer;
-import mlflex.transformation.NullTransformer;
+//import mlflex.transformation.NullTransformer;
 import mlflex.helper.*;
 
 import java.util.*;
@@ -36,7 +36,7 @@ import java.util.concurrent.Callable;
  */
 public abstract class AbstractDataProcessor
 {
-    private RawDataInstanceCollection _rawDataInstances = new RawDataInstanceCollection();
+    private DataInstanceCollection _dataInstances = new DataInstanceCollection();
 
     /** This method takes the raw input data that the user specifies and stores it in the ML-Flex native format. It's necessary to store the files on disk to enable restartability.
      *
@@ -47,22 +47,6 @@ public abstract class AbstractDataProcessor
     {
         Singletons.Log.Debug("Parsing input data for " + GetDescription());
         ParseInputData();
-
-        Singletons.Log.Debug("Getting raw instances for " + GetDescription());
-        RawDataInstanceCollection rawInstances = GetRawInstances();
-
-        Singletons.Log.Debug("Transforming/summarizing raw instances for " + GetDescription());
-        DataInstanceCollection instances = rawInstances.GetTransformedSummarizedCollection(this);
-        rawInstances = null; // Saves memory?
-        ClearRawIinstances(); // Saves memory?
-
-        Singletons.Log.Debug("Transforming instances for " + GetDescription());
-        DataInstanceCollection transformedInstances = TransformInstances(instances);
-        transformedInstances.FormatDataPointNames();
-
-        Singletons.Log.Debug("Saving transformed instances for " + GetDescription());
-        transformedInstances.SerializeToFile(GetDataFilePath());
-        //DataInstanceCollection.DeserializeFromFile(GetDataFilePath()); // This verifies that you can read the file after writing it
 
         return Boolean.TRUE;
     }
@@ -120,7 +104,7 @@ public abstract class AbstractDataProcessor
      */
     public DataValueMeta GetDataPointMeta(String dataPointName)
     {
-        return new DataValueMeta(dataPointName, new GetFirstSummarizer(), new NullTransformer());
+        return new DataValueMeta(dataPointName, new GetFirstSummarizer());
     }
 
     /** After raw data have been processed, they are packages into a DataInstanceCollection and can be processed further by calling this method.
@@ -128,9 +112,9 @@ public abstract class AbstractDataProcessor
      * @return A collection of data instances
      * @throws Exception
      */
-    public DataInstanceCollection GetTransformedInstances() throws Exception
+    public DataInstanceCollection GetDataInstances() throws Exception
     {
-        return GetInstancesFromFile();
+        return _dataInstances;
     }
 
     /** Retrieves data instances from a processed file.
@@ -138,24 +122,24 @@ public abstract class AbstractDataProcessor
      * @return Data instances that are stored in an ML-Flex formatted file
      * @throws Exception
      */
-    protected DataInstanceCollection GetInstancesFromFile() throws Exception
-    {
-        String filePath = GetDataFilePath();
+//    protected DataInstanceCollection GetInstancesFromFile() throws Exception
+//    {
+//        String filePath = GetDataFilePath();
+//
+//        if (!FileUtilities.FileExists(filePath))
+//            Singletons.Log.ExceptionFatal("No data file exists at " + filePath + ".");
+//
+//        return DataInstanceCollection.DeserializeFromFile(filePath);
+//    }
 
-        if (!FileUtilities.FileExists(filePath))
-            Singletons.Log.ExceptionFatal("No data file exists at " + filePath + ".");
-
-        return DataInstanceCollection.DeserializeFromFile(filePath);
-    }
-
-    /** After data instances have been processed and stored, it is still possible to modify them before each time they are used in a machine-learning analysis. This method supports that functionality.
-     *
-     * @param instances Data instances to be updated
-     * @throws Exception
-     */
-    public void UpdateInstancesForAnalysis(DataInstanceCollection instances) throws Exception
-    {
-    }
+//    /** After data instances have been processed and stored, it is still possible to modify them before each time they are used in a machine-learning analysis. This method supports that functionality.
+//     *
+//     * @param instances Data instances to be updated
+//     * @throws Exception
+//     */
+//    public void UpdateInstancesForAnalysis(DataInstanceCollection instances) throws Exception
+//    {
+//    }
 
     /** Returns the absolute file path where ML-Flex stores data for this processor.
      *
@@ -175,179 +159,7 @@ public abstract class AbstractDataProcessor
      */
     public void SaveRawDataPoint(String dataPointName, String instanceID, String value) throws Exception
     {
-        _rawDataInstances.Add(dataPointName, instanceID, value);
-    }
-
-    /** This method retrieves raw data instances after the initial processing has occured.
-     *
-     * @return Collection of raw data instances
-     * @throws Exception
-     */
-    protected RawDataInstanceCollection GetRawInstances() throws Exception
-    {
-        return _rawDataInstances;
-    }
-
-    /** Removes raw data instances from memory.
-     *
-     * @throws Exception
-     */
-    public void ClearRawIinstances() throws Exception
-    {
-        _rawDataInstances = new RawDataInstanceCollection();
-    }
-
-    /** After raw data have been processed by ML-Flex, they can be transformed before they are stored in the ML-Flex final format. This method supports that functionality. It invokes various other methods that can be overriden to transform individual parts of the data, or this method can be overridden to perform a wholesale transformation.
-     *
-     * @param rawInstances Raw data instances to be transformed
-     * @return Transformed data instances
-     * @throws Exception
-     */
-    protected DataInstanceCollection TransformInstances(DataInstanceCollection rawInstances) throws Exception
-    {
-        DataInstanceCollection transformedInstances = new DataInstanceCollection();
-
-        for (DataValues instance : rawInstances)
-            if (KeepRawInstance(instance))
-                transformedInstances.Add(TransformRawInstance(instance));
-
-        Singletons.Log.Debug("Transforming data points for " + GetDescription());
-        ArrayList<String> dataPointNames = transformedInstances.GetDataPointNames();
-        for (String dataPointName : dataPointNames)
-        {
-            DataValues transformed = TransformDataPoint(transformedInstances.GetDataPointValues(dataPointName));
-            transformedInstances.UpdateDataPoints(dataPointName, transformed);
-        }
-
-        Singletons.Log.Debug("Updating data point names for " + GetDescription());
-        for (String dataPointName : dataPointNames)
-            transformedInstances.UpdateDataPointName(dataPointName, TransformDataPointName(dataPointName));
-
-        Singletons.Log.Debug("# transformed instances: " + transformedInstances.Size());
-        Singletons.Log.Debug("# transformed data points: " + transformedInstances.GetNumDataPoints());
-
-        return transformedInstances;
-    }
-
-    /** This method indicates whether a given raw data instance should be retained for further processing. A custom data processor might use certain filter criteria to remove some data instances.
-     *
-     * @param instance Data instance to be tested
-     * @return Whether or not the instance should be retained
-     * @throws Exception
-     */
-    protected boolean KeepRawInstance(DataValues instance) throws Exception
-    {
-        return true;
-    }
-
-    /** Individual data instances can be transformed before they are stored in the ML-Flex final format. This method supports that functionality for individual data instances. By default, no transformation is performed.
-     *
-     * @param instance Data instance to be transformed.
-     * @return Transformed data instance.
-     * @throws Exception
-     */
-    protected DataValues TransformRawInstance(DataValues instance) throws Exception
-    {
-        return instance;
-    }
-
-    /** Individual data points can be transformed before data are stored in the ML-Flex final format. This method supports that functionality. By default, no transformation is performed.
-     *
-     * @param data
-     * @return Transformed data values
-     * @throws Exception
-     */
-    protected DataValues TransformDataPoint(DataValues data) throws Exception
-    {
-        return data;
-    }
-
-    /** The name of a data point can be changed using this method. By default, no transformation is performed.
-     *
-     * @param dataPointName Raw data point name
-     * @return Transformed data point name
-     * @throws Exception
-     */
-    protected String TransformDataPointName(String dataPointName) throws Exception
-    {
-        return dataPointName;
-    }
-
-    /** This method indicates whether a given transformed data instance should be retained for further processing. A custom data processor might use certain filter criteria to remove some data instances.
-     *
-     * @param instance Data instance to be tested
-     * @return Whether or not the instance should be retained
-     * @throws Exception
-     */
-    public boolean KeepTransformedInstance(DataValues instance) throws Exception
-    {
-        return true;
-    }
-
-    /** This method removes any sparse instances, so they will not be used in machine-learning analyses.
-     *
-     * @param instances Data instances to be tested for sparsity
-     * @throws Exception
-     */
-    public void RemoveSparseInstances(DataInstanceCollection instances) throws Exception
-    {
-        if (GetProportionMissingPerInstanceOK() == 1.0)
-            return;
-        
-        ArrayList<String> toRemove = new ArrayList<String>();
-
-        for (DataValues instance : instances)
-            if (InstanceIsSparse(instance))
-                toRemove.add(instance.GetID());
-
-        instances.RemoveInstances(toRemove);
-    }
-
-    private boolean InstanceIsSparse(DataValues instance) throws Exception
-    {
-        double numMissing = 0.0;
-
-        for (String dataPointName : instance.GetDataPointNames())
-            if (instance.GetDataPointValue(dataPointName).equals(Settings.MISSING_VALUE_STRING))
-                numMissing += 1.0;
-
-        double proportionMissing = (numMissing / (double) instance.GetDataPointNames().size());
-        return proportionMissing > GetProportionMissingPerInstanceOK();
-    }
-
-    /** This method removes any sparse data points, so they will not be used in machine-learning analyses.
-     *
-     * @param instances Data instances to be tested for sparsity
-     * @throws Exception
-     */
-    public void RemoveSparseDataPoints(final DataInstanceCollection instances) throws Exception
-    {
-        if (GetProportionMissingPerDataPointOK() == 1.0)
-            return;
-
-        // This enables us to do this in parallel
-        MultiThreadedTaskHandler taskHandler = new MultiThreadedTaskHandler("remove sparse data points");
-
-        for (final String dataPointName : instances.GetDataPointNames())
-        {
-            taskHandler.Add(new Callable<Object>()
-            {
-                public Object call() throws Exception
-                {
-                    ArrayList<String> values = instances.GetDataPointValues(dataPointName).GetAllValues();
-
-                    double numMissing = (double)ListUtilities.GetNumMatches(values, Settings.MISSING_VALUE_STRING);
-                    boolean isSparse = ((numMissing / (double)instances.Size()) > GetProportionMissingPerDataPointOK());
-
-                    if (isSparse)
-                        return dataPointName;
-                    else
-                        return null;
-                }
-            });
-        }
-
-        instances.RemoveDataPoints(new ArrayList<String>(taskHandler.Execute()));
+        _dataInstances.Add(dataPointName, instanceID, value);
     }
 
     /** This method saves basic statistical information about the transformed data used by this processor.

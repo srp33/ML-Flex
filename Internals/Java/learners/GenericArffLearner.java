@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -35,7 +35,7 @@ public class GenericArffLearner extends AbstractMachineLearner
     public ArrayList<String> SelectOrRankFeatures(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainData) throws Exception
     {
         // Create an input file with the training data
-        String inputFilePath = CreateInputFile(trainData);
+        String inputFilePath = CreateInputFile(trainData, trainData.GetDataPointNames());
 
         // Generate an output directory
         String outDirectory = GetOutputDirectory();
@@ -60,12 +60,12 @@ public class GenericArffLearner extends AbstractMachineLearner
     }
 
     @Override
-    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainingData, DataInstanceCollection testData) throws Exception
+    public ModelPredictions TrainTest(String commandTemplate, ArrayList<String> algorithmParameters, DataInstanceCollection trainingData, DataInstanceCollection testData, ArrayList<String> features) throws Exception
     {
         // Create an input file with the training data
-        String inputTrainingFilePath = CreateInputFile(trainingData);
+        String inputTrainingFilePath = CreateInputFile(trainingData, features);
         // Create an input file with the test data
-        String inputTestFilePath = CreateInputFile(testData);
+        String inputTestFilePath = CreateInputFile(testData, features);
 
         // Generate the output directory
         String outDirectory = GetOutputDirectory();
@@ -111,11 +111,11 @@ public class GenericArffLearner extends AbstractMachineLearner
 
             // Get the probability for each class that is specified by the program for this instance
             ArrayList<Double> classProbabilities = new ArrayList<Double>();
-            for (String dependentVariableOption : Singletons.InstanceVault.TransformedDependentVariableOptions)
+            for (String dependentVariableOption : Singletons.InstanceVault.DependentVariableOptions)
                 classProbabilities.add(Double.parseDouble(lineItems.get(headerItems.indexOf(dependentVariableOption))));
 
             // Create a prediction object using the parsed values
-            Prediction prediction = new Prediction(testInstanceIDs.get(i), Singletons.InstanceVault.GetTransformedDependentVariableValue(testInstanceIDs.get(i)), predictionValue, classProbabilities);
+            Prediction prediction = new Prediction(testInstanceIDs.get(i), Singletons.InstanceVault.GetDependentVariableValue(testInstanceIDs.get(i)), predictionValue, classProbabilities);
 
             predictions.add(prediction);
         }
@@ -129,9 +129,9 @@ public class GenericArffLearner extends AbstractMachineLearner
      * @return Path to the saved file
      * @throws Exception
      */
-    protected String CreateInputFile(DataInstanceCollection instances) throws Exception
+    protected String CreateInputFile(DataInstanceCollection instances, ArrayList<String> features) throws Exception
     {
-        return new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), instances, null, true).CreateArffFile().GetArffFilePath();
+        return new AnalysisFileCreator(Settings.TEMP_DATA_DIR, MiscUtilities.GetUniqueID(), instances, null, true, features).CreateArffFile().GetArffFilePath();
     }
 
     /** Creates an output directory to where results will be stored.

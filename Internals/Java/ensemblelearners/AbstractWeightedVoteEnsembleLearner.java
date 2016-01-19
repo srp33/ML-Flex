@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -49,7 +49,7 @@ public abstract class AbstractWeightedVoteEnsembleLearner extends AbstractEnsemb
     @Override
     protected ModelPrediction MakeInstancePrediction(String instanceID, EnsemblePredictionInfos combinedPredictionInfos) throws Exception
     {
-        ArrayList<String> classes = Singletons.InstanceVault.TransformedDependentVariableOptions;
+        ArrayList<String> classes = Singletons.InstanceVault.DependentVariableOptions;
 
         // Initialize the class weights
         ArrayList<Double> classWeights = new ArrayList<Double>();
@@ -69,7 +69,7 @@ public abstract class AbstractWeightedVoteEnsembleLearner extends AbstractEnsemb
         for (int i=0; i<classWeights.size(); i++)
             classProbabilities.add(classWeights.get(i) / totalWeight);
 
-        Prediction prediction = new Prediction(instanceID, Singletons.InstanceVault.GetTransformedDependentVariableValue(instanceID), predictedClass, classProbabilities);
+        Prediction prediction = new Prediction(instanceID, Singletons.InstanceVault.GetDependentVariableValue(instanceID), predictedClass, classProbabilities);
 
         return new ModelPrediction(MajorityVoteEnsembleLearner.GetDescription(predictedClass, classProbabilities), prediction);
     }

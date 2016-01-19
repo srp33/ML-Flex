@@ -1,4 +1,4 @@
 # This experiment is based on the HorseColic data set in the UCI Machine Learning Repository.
 DATA_PROCESSORS=mlflex.dataprocessors.UciMachineLearningDataProcessor("InputData/UCI/horse-colic.data", 2, 23, " ")
-CLASSIFICATION_ALGORITHMS=weka_naive_bayes;weka_decision_tree
+CLASSIFICATION_ALGORITHMS=weka_naive_bayes
 NUM_ITERATIONS=1

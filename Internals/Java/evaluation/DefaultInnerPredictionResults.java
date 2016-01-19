@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -23,7 +23,6 @@ package mlflex.evaluation;
 
 import mlflex.core.Prediction;
 import mlflex.core.Predictions;
-import mlflex.core.DataValues;
 import mlflex.core.Singletons;
 
 import java.util.ArrayList;
@@ -48,11 +47,11 @@ public class DefaultInnerPredictionResults extends PredictionResults
     {
         ArrayList<Prediction> predictions = new ArrayList<Prediction>();
 
-        for (DataValues instance : Singletons.InstanceVault.TransformedDependentVariableInstances.Get(Singletons.InstanceVault.GetCrossValidationAssignments().GetTestIDs(outerFold)))
+        for (String instanceID : Singletons.InstanceVault.GetCrossValidationAssignments().GetTestIDs(outerFold))
         {
-            String dependentVariableValue = Singletons.InstanceVault.GetTransformedDependentVariableValue(instance.GetID());
+            String dependentVariableValue = Singletons.InstanceVault.GetDependentVariableValue(instanceID);
             // The default is that the actual class is the same as the predicted class
-            predictions.add(new Prediction(instance.GetID(), dependentVariableValue, dependentVariableValue));
+            predictions.add(new Prediction(instanceID, dependentVariableValue, dependentVariableValue));
         }
         
         return new Predictions(predictions);

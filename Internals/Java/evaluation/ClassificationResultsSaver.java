@@ -2,7 +2,7 @@
 // 
 // --------------------------------------------------------------------------
 // 
-// Copyright 2011 Stephen Piccolo
+// Copyright 2016 Stephen Piccolo
 // 
 // This file is part of ML-Flex.
 // 
@@ -91,7 +91,7 @@ public class ClassificationResultsSaver
         Singletons.Log.Debug("Assign variables that depend on whether results are being saved for inner or outer cross-validation folds");
         Predictions predictions = outer ? _modelSelector.GetBestOuterPredictionsAllFolds() : _modelSelector.GetBestInnerPredictions(1);
 
-        Singletons.Log.Debug("Calculate and save performance metrics");
+        Singletons.Log.Debug("Calculate and save performance metrics to " + filePaths.PERFORMANCE_METRICS);
         SavePerformanceMetrics(new PredictionResults(predictions), filePaths.PERFORMANCE_METRICS, PERFORMANCE_METRICS_COMMENT);
 
         Singletons.Log.Debug("Calculate and save per-class metrics");
@@ -168,9 +168,6 @@ public class ClassificationResultsSaver
         nameValueResults.add(NameValuePair.Create("Complexity improvement (bits)", results.GetWekaEvaluation().SFEntropyGain()));
         nameValueResults.add(NameValuePair.Create("Complexity improvement (bits / instance)", results.GetWekaEvaluation().SFMeanEntropyGain()));
 
-//        if (Singletons.InstanceVault.RawDependentVariableValuesAreContinuous())
-//            nameValueResults.add(NameValuePair.Create("Log-Rank Statistic", new SurvivalHelper(results.Predictions).GetLogRankStatistic()));
-
         nameValueResults.add(0, new NameValuePair("Metric", "Result"));
 
         // Save the metrics to a file
@@ -192,14 +189,14 @@ public class ClassificationResultsSaver
 
         ArrayList<NameValuePair> nameValueResults = new ArrayList<NameValuePair>();
 
-        for (String dependentVariableClass : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
             nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + dependentVariableClass + "]", results.GetNumPredictedAsDependentVariableClass(dependentVariableClass)));
             nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + dependentVariableClass + "] correctly", results.GetNumPredictedAsDependentVariableClassCorrectly(dependentVariableClass)));
             nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + dependentVariableClass + "] incorrectly", results.GetNumPredictedAsDependentVariableClassIncorrectly(dependentVariableClass)));
         }
 
-        for (String dependentVariableClass : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
             nameValueResults.add(NameValuePair.Create("Proportion instances predicted as [" + dependentVariableClass + "]", results.GetProportionPredictedAsDependentVariableClass(dependentVariableClass)));
             // Could be considered true-positive rate
@@ -208,13 +205,13 @@ public class ClassificationResultsSaver
             nameValueResults.add(NameValuePair.Create("Proportion instances predicted as [" + dependentVariableClass + "] incorrectly", results.GetProportionPredictedAsDependentVariableClassIncorrectly(dependentVariableClass)));
         }
 
-        for (String dependentVariableClass : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
             nameValueResults.add(NameValuePair.Create("Number [" + dependentVariableClass + "] instances predicted correctly", results.GetNumActualsWithDependentVariableClassThatWerePredictedCorrectly(dependentVariableClass)));
             nameValueResults.add(NameValuePair.Create("Number [" + dependentVariableClass + "] instances predicted incorrectly", results.GetNumActualsWithDependentVariableClassThatWerePredictedIncorrectly(dependentVariableClass)));
         }
 
-        for (String dependentVariableClass : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
             // Could be considered sensitivity / recall
             nameValueResults.add(NameValuePair.Create("Proportion [" + dependentVariableClass + "] instances predicted correctly", results.GetProportionActualsWithDependentVariableClassThatWerePredictedCorrectly(dependentVariableClass)));
@@ -232,14 +229,14 @@ public class ClassificationResultsSaver
 
         // Add actual classes as header row
         outLines.add(ListUtilities.CreateStringList(""));
-        outLines.get(0).addAll(ListUtilities.Prefix(Singletons.InstanceVault.TransformedDependentVariableOptions, "Predicted as "));
+        outLines.get(0).addAll(ListUtilities.Prefix(Singletons.InstanceVault.DependentVariableOptions, "Predicted as "));
 
         // Add rows
-        for (String actualClass : Singletons.InstanceVault.TransformedDependentVariableOptions)
+        for (String actualClass : Singletons.InstanceVault.DependentVariableOptions)
         {
             ArrayList<String> row = ListUtilities.CreateStringList(actualClass);
 
-            for (String predictedClass : Singletons.InstanceVault.TransformedDependentVariableOptions)
+            for (String predictedClass : Singletons.InstanceVault.DependentVariableOptions)
                 row.add(String.valueOf(predictionResults.GetNumActualsPredictedAs(actualClass, predictedClass)));
 
             outLines.add(row);
@@ -285,7 +282,7 @@ public class ClassificationResultsSaver
     private static void SavePredictionsFile(Predictions predictions, String outFilePath, String headerComment) throws Exception
     {
     	Singletons.Log.Debug("Beginning to save predictions");
-        ArrayList<String> dependentVariableClasses = Singletons.InstanceVault.TransformedDependentVariableOptions;
+        ArrayList<String> dependentVariableClasses = Singletons.InstanceVault.DependentVariableOptions;
         ArrayList<ArrayList<String>> outRows = new ArrayList<ArrayList<String>>();
 
         Singletons.Log.Debug("Format the predictions file header");
@@ -293,13 +290,13 @@ public class ClassificationResultsSaver
         for (String x : dependentVariableClasses)
             headerVals.add(x + "_Probability");
 
-        Singletons.Log.Debug("Include the raw dependent variable when relevant");
-        if (Singletons.InstanceVault.RawDependentVariableValuesAreContinuous())
-            headerVals.add(1, "Raw_Dependent_Variable_Value");
+//        Singletons.Log.Debug("Include the raw dependent variable when relevant");
+//        if (Singletons.InstanceVault.RawDependentVariableValuesAreContinuous())
+//            headerVals.add(1, "Raw_Dependent_Variable_Value");
 
         outRows.add(headerVals);
 
-        boolean rawDependentVariablesAreContinous = Singletons.InstanceVault.RawDependentVariableValuesAreContinuous();
+//        boolean rawDependentVariablesAreContinous = Singletons.InstanceVault.RawDependentVariableValuesAreContinuous();
 
         Singletons.Log.Debug("Build output for each prediction that has been made");
         for (String instanceID : predictions.GetInstanceIDs())
@@ -311,9 +308,9 @@ public class ClassificationResultsSaver
             for (int i=0; i<dependentVariableClasses.size(); i++)
                 predictionVals.add(String.valueOf(prediction.ClassProbabilities.get(i)));
 
-            // Include the raw dependent variable value when relevant
-            if (rawDependentVariablesAreContinous)
-                predictionVals.add(1, Singletons.InstanceVault.GetRawDependentVariableValue(prediction.InstanceID));
+//            // Include the raw dependent variable value when relevant
+//            if (rawDependentVariablesAreContinous)
+//                predictionVals.add(1, Singletons.InstanceVault.GetRawDependentVariableValue(prediction.InstanceID));
 
             outRows.add(predictionVals);
         }
