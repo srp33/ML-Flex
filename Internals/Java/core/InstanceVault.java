@@ -27,6 +27,7 @@ import mlflex.dataprocessors.RandomDataProcessor;
 import mlflex.helper.Config;
 import mlflex.helper.DataTypeUtilities;
 import mlflex.helper.ListUtilities;
+import mlflex.helper.MiscUtilities;
 
 import java.util.*;
 
@@ -245,6 +246,8 @@ public class InstanceVault
            
             if (DataTypeUtilities.IsNumeric(value))
             	value = "Class" + value;
+
+            value = MiscUtilities.FormatName(value);
            
 		 	DependentVariableInstances.put(instanceID, value);
         }

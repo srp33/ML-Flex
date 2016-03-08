@@ -25,6 +25,7 @@ import mlflex.core.*;
 import mlflex.ensemblelearners.AbstractEnsembleLearner;
 import mlflex.helper.FileUtilities;
 import mlflex.helper.ListUtilities;
+import mlflex.helper.MiscUtilities;
 import mlflex.helper.ResultsFileUtilities;
 
 import java.util.ArrayList;
@@ -191,31 +192,31 @@ public class ClassificationResultsSaver
 
         for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
-            nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + dependentVariableClass + "]", results.GetNumPredictedAsDependentVariableClass(dependentVariableClass)));
-            nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + dependentVariableClass + "] correctly", results.GetNumPredictedAsDependentVariableClassCorrectly(dependentVariableClass)));
-            nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + dependentVariableClass + "] incorrectly", results.GetNumPredictedAsDependentVariableClassIncorrectly(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + MiscUtilities.UnformatName(dependentVariableClass) + "]", results.GetNumPredictedAsDependentVariableClass(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + MiscUtilities.UnformatName(dependentVariableClass) + "] correctly", results.GetNumPredictedAsDependentVariableClassCorrectly(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Number instances predicted as [" + MiscUtilities.UnformatName(dependentVariableClass) + "] incorrectly", results.GetNumPredictedAsDependentVariableClassIncorrectly(dependentVariableClass)));
         }
 
         for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
-            nameValueResults.add(NameValuePair.Create("Proportion instances predicted as [" + dependentVariableClass + "]", results.GetProportionPredictedAsDependentVariableClass(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Proportion instances predicted as [" + MiscUtilities.UnformatName(dependentVariableClass) + "]", results.GetProportionPredictedAsDependentVariableClass(dependentVariableClass)));
             // Could be considered true-positive rate
-            nameValueResults.add(NameValuePair.Create("Proportion instances predicted as [" + dependentVariableClass + "] correctly", results.GetProportionPredictedAsDependentVariableClassCorrectly(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Proportion instances predicted as [" + MiscUtilities.UnformatName(dependentVariableClass) + "] correctly", results.GetProportionPredictedAsDependentVariableClassCorrectly(dependentVariableClass)));
             // Could be considered false-positive rate
-            nameValueResults.add(NameValuePair.Create("Proportion instances predicted as [" + dependentVariableClass + "] incorrectly", results.GetProportionPredictedAsDependentVariableClassIncorrectly(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Proportion instances predicted as [" + MiscUtilities.UnformatName(dependentVariableClass) + "] incorrectly", results.GetProportionPredictedAsDependentVariableClassIncorrectly(dependentVariableClass)));
         }
 
         for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
-            nameValueResults.add(NameValuePair.Create("Number [" + dependentVariableClass + "] instances predicted correctly", results.GetNumActualsWithDependentVariableClassThatWerePredictedCorrectly(dependentVariableClass)));
-            nameValueResults.add(NameValuePair.Create("Number [" + dependentVariableClass + "] instances predicted incorrectly", results.GetNumActualsWithDependentVariableClassThatWerePredictedIncorrectly(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Number [" + MiscUtilities.UnformatName(dependentVariableClass) + "] instances predicted correctly", results.GetNumActualsWithDependentVariableClassThatWerePredictedCorrectly(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Number [" + MiscUtilities.UnformatName(dependentVariableClass) + "] instances predicted incorrectly", results.GetNumActualsWithDependentVariableClassThatWerePredictedIncorrectly(dependentVariableClass)));
         }
 
         for (String dependentVariableClass : Singletons.InstanceVault.DependentVariableOptions)
         {
             // Could be considered sensitivity / recall
-            nameValueResults.add(NameValuePair.Create("Proportion [" + dependentVariableClass + "] instances predicted correctly", results.GetProportionActualsWithDependentVariableClassThatWerePredictedCorrectly(dependentVariableClass)));
-            nameValueResults.add(NameValuePair.Create("Proportion [" + dependentVariableClass + "] instances predicted incorrectly", results.GetProportionActualsWithDependentVariableClassThatWerePredictedIncorrectly(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Proportion [" + MiscUtilities.UnformatName(dependentVariableClass) + "] instances predicted correctly", results.GetProportionActualsWithDependentVariableClassThatWerePredictedCorrectly(dependentVariableClass)));
+            nameValueResults.add(NameValuePair.Create("Proportion [" + MiscUtilities.UnformatName(dependentVariableClass) + "] instances predicted incorrectly", results.GetProportionActualsWithDependentVariableClassThatWerePredictedIncorrectly(dependentVariableClass)));
         }
 
         nameValueResults.add(0, new NameValuePair("Metric", "Result"));
@@ -229,12 +230,12 @@ public class ClassificationResultsSaver
 
         // Add actual classes as header row
         outLines.add(ListUtilities.CreateStringList(""));
-        outLines.get(0).addAll(ListUtilities.Prefix(Singletons.InstanceVault.DependentVariableOptions, "Predicted as "));
+        outLines.get(0).addAll(ListUtilities.Prefix(MiscUtilities.UnformatNames(Singletons.InstanceVault.DependentVariableOptions), "Predicted as "));
 
         // Add rows
         for (String actualClass : Singletons.InstanceVault.DependentVariableOptions)
         {
-            ArrayList<String> row = ListUtilities.CreateStringList(actualClass);
+            ArrayList<String> row = MiscUtilities.UnformatNames(ListUtilities.CreateStringList(actualClass));
 
             for (String predictedClass : Singletons.InstanceVault.DependentVariableOptions)
                 row.add(String.valueOf(predictionResults.GetNumActualsPredictedAs(actualClass, predictedClass)));
@@ -288,7 +289,7 @@ public class ClassificationResultsSaver
         Singletons.Log.Debug("Format the predictions file header");
         ArrayList<String> headerVals = ListUtilities.CreateStringList("Instance_ID", "Dependent_Variable_Value", "Prediction");
         for (String x : dependentVariableClasses)
-            headerVals.add(x + "_Probability");
+            headerVals.add(MiscUtilities.UnformatName(x) + "_Probability");
 
 //        Singletons.Log.Debug("Include the raw dependent variable when relevant");
 //        if (Singletons.InstanceVault.RawDependentVariableValuesAreContinuous())

@@ -59,6 +59,9 @@ public class AggregateDataProcessor extends AbstractDataProcessor
                 {
                 	for (String dataPointName : Singletons.InstanceVault.GetInstancesForAnalysis(processor).GetDataPointNames())
                 	{
+                		if (dataPointName.equals(Singletons.ProcessorVault.DependentVariableDataProcessor.DataPointName))
+                			continue;
+                		
                 		String newDataPointName = processor.GetDescription() + "_" + dataPointName;
                 		instances.Add(newDataPointName, instanceID, Singletons.InstanceVault.GetInstancesForAnalysis(processor).GetDataPointValue(instanceID, dataPointName));
                 	}

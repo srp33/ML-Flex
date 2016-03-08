@@ -133,7 +133,7 @@ public class HtmlReportGenerator
                 if (Singletons.Config.GetNumIterations() > 1)
                 {
                     _htmlBuffer.append("<li>");
-                    AddIterationLinks(modelSelector.GetResultsFilePaths(false, false).DIRECTORY_PATH, "Training_Data", modelSelector.GetResultsFilePaths(false, true).DIRECTORY_PATH.replace(Settings.OUTPUT_DIR, Settings.OUTPUT_DIR + Settings.HTML_RELATIVE_DIR), "Results per Iteration", "../../../../../../");
+                    AddIterationLinks(modelSelector.GetResultsFilePaths(false, false).DIRECTORY_PATH, "Training_Data/", modelSelector.GetResultsFilePaths(false, true).DIRECTORY_PATH.replace(Settings.OUTPUT_DIR, Settings.OUTPUT_DIR + Settings.HTML_RELATIVE_DIR), "Results per Iteration", "../../../../../../");
                 }
 
                 _htmlBuffer.append("</ul>");

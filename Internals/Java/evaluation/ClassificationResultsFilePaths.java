@@ -51,6 +51,9 @@ public class ClassificationResultsFilePaths
     public ClassificationResultsFilePaths(String directoryPath) throws Exception
     {
         FileUtilities.CreateDirectoryIfNotExists(directoryPath);
+        
+//        if (!directoryPath.endsWith("/"))
+//        	directoryPath = directoryPath += "/";
 
         DIRECTORY_PATH = directoryPath;
         PERFORMANCE_METRICS = directoryPath + "Performance_Metrics.txt";

@@ -24,7 +24,9 @@ package mlflex.core;
 import mlflex.helper.*;
 import mlflex.parallelization.MultiThreadedTaskHandler;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,15 +44,15 @@ public class DataInstanceCollection implements Iterable<String>
     public static String END_OF_FILE_MARKER = "[EOF]";
     private static String COMMA_REPLACE_STRING = "_comma_";
     
-    private HashMap<String, HashMap<Integer, String>> _instances;
-    private HashMap<String, Integer> _valueIndexMap;
+    private HashMap<String, CompactHashMap<Integer, String>> _instances;
+    private CompactHashMap<String, Integer> _valueIndexMap;
     private int _intRefCount;
 
     /** Default constructor */
     public DataInstanceCollection()
     {
-        _instances = new HashMap<String, HashMap<Integer, String>>();
-        _valueIndexMap  = new HashMap<String, Integer>();
+        _instances = new HashMap<String, CompactHashMap<Integer, String>>();
+        _valueIndexMap  = new CompactHashMap<String, Integer>(COMPACT_TRANSLATOR_STR_INT);
         _intRefCount = Integer.MIN_VALUE;
     }
 
@@ -70,7 +72,7 @@ public class DataInstanceCollection implements Iterable<String>
     	Integer intDataPointName = GetIntRef(dataPointName);
 
     	if (!_instances.containsKey(instanceID))
-    		_instances.put(instanceID, new HashMap<Integer, String>());
+    		_instances.put(instanceID.intern(), new CompactHashMap<Integer, String>(COMPACT_TRANSLATOR_INT_STR));
 
     	_instances.get(instanceID).put(intDataPointName, value);
     }
@@ -111,27 +113,6 @@ public class DataInstanceCollection implements Iterable<String>
         return _instances.containsKey(instanceID);
     }
 
-//    /** Gets the data instance for the specified data instance ID.
-//     *
-//     * @param id Query data instance ID
-//     * @return Data instance for the specified data instance ID
-//     */
-//    public HashMap<String, String> Get(String instanceID)
-//    {
-//    	HashMap<Integer, String> intInstance = _instances.get(instanceID);
-//    	HashMap<String, String> instance = new HashMap<String, String>();
-//
-//    	if (intInstance != null)
-//    	{
-//    		for (String dataPointName : _dataPointNames)
-//    			instance.put(dataPointName, intInstance.get(GetIntRef(dataPointName)));
-//    		
-//    		return instance;
-//    	}
-//
-//        return null;
-//    }
-
     /** Gets a collection of data instances that match the specified data instance IDs.
     *
     * @param ids Query data instance IDs
@@ -144,7 +125,7 @@ public class DataInstanceCollection implements Iterable<String>
        result._valueIndexMap = _valueIndexMap;
        
        for (String instanceID : instanceIDs)
-			result._instances.put(instanceID, _instances.get(instanceID));
+			result._instances.put(instanceID.intern(), _instances.get(instanceID));
 
        return result;
    }
@@ -166,7 +147,7 @@ public class DataInstanceCollection implements Iterable<String>
    */
    private String GetDataPointValue(String instanceID, Integer intDataPointName)
    {
-	   HashMap<Integer, String> instance = _instances.get(instanceID);
+	   CompactHashMap<Integer, String> instance = _instances.get(instanceID);
 	   
 	   if (instance == null)
 		   return Settings.MISSING_VALUE_STRING;
@@ -194,7 +175,7 @@ public class DataInstanceCollection implements Iterable<String>
 	    HashMap<String, String> values = new HashMap<String, String>();
 	
 	    for (String instanceID : _instances.keySet())
-	        values.put(instanceID, GetDataPointValue(instanceID, dataPointName));
+	        values.put(instanceID.intern(), GetDataPointValue(instanceID, dataPointName));
 	
 	    return values;
 	}
@@ -209,7 +190,7 @@ public class DataInstanceCollection implements Iterable<String>
        ArrayList<String> values = new ArrayList<String>();
 
        for (String dataPointName : dataPointNames)
-           values.add(GetDataPointValue(instanceID, dataPointName));
+           values.add(GetDataPointValue(instanceID, dataPointName).intern());
 
        return values;
     }
@@ -232,7 +213,7 @@ public class DataInstanceCollection implements Iterable<String>
     		intKey = new Integer(_intRefCount);
     		_intRefCount++;
 
-    		_valueIndexMap.put(key, intKey);
+    		_valueIndexMap.put(key.intern(), intKey);
     	}
     	
     	return intKey;
@@ -412,4 +393,98 @@ public class DataInstanceCollection implements Iterable<String>
         str = str.substring(0, str.length()-1);
         return str;
     }
+    
+    // http://www.nayuki.io/res/compact-hash-map-java/CompactHashMapDemo.java
+	private static final CompactMapTranslator<Integer, String> COMPACT_TRANSLATOR_INT_STR = new CompactMapTranslator<Integer, String>() {		
+		public boolean isKeyInstance(Object obj) {
+			return obj instanceof Integer;
+		}
+		
+		public int getHash(Integer key) {
+			return key.hashCode();
+		}
+		
+		public byte[] serialize(Integer key, String value) {
+			try {
+				byte[] packed = value.getBytes("UTF-8");
+				int off = packed.length;
+				packed = Arrays.copyOf(packed, off + 4);
+				int val = key;
+				packed[off + 0] = (byte)(val >>> 24);
+				packed[off + 1] = (byte)(val >>> 16);
+				packed[off + 2] = (byte)(val >>>  8);
+				packed[off + 3] = (byte)(val >>>  0);
+				return packed;
+			} catch (UnsupportedEncodingException e) {
+				throw new AssertionError(e);
+			}
+		}
+
+		public Integer deserializeKey(byte[] packed) {
+			int n = packed.length;
+			return (packed[n - 1] & 0xFF) | (packed[n - 2] & 0xFF) << 8 | (packed[n - 3] & 0xFF) << 16 | packed[n - 4] << 24;
+		}
+		
+		public String deserializeValue(byte[] packed) {
+			try {
+				return new String(packed, 0, packed.length - 4, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				throw new AssertionError(e);
+			}
+		}
+	};
+
+	//http://www.nayuki.io/res/compact-hash-map-java/CompactHashMapDemo.java
+	private static final CompactMapTranslator<String,Integer> COMPACT_TRANSLATOR_STR_INT = new CompactMapTranslator<String,Integer>() {
+		
+		public boolean isKeyInstance(Object obj) {
+			return obj instanceof String;
+		}
+		
+		
+		public int getHash(String key) {
+			int state = 0;
+			for (int i = 0; i < key.length(); i++) {
+				state += key.charAt(i);
+				for (int j = 0; j < 4; j++) {
+					state *= 0x7C824F73;
+					state ^= 0x5C12FE83;
+					state = Integer.rotateLeft(state, 5);
+				}
+			}
+			return state;
+		}
+		
+		
+		public byte[] serialize(String key, Integer value) {
+			try {
+				byte[] packed = key.getBytes("UTF-8");
+				int off = packed.length;
+				packed = Arrays.copyOf(packed, off + 4);
+				int val = value;
+				packed[off + 0] = (byte)(val >>> 24);
+				packed[off + 1] = (byte)(val >>> 16);
+				packed[off + 2] = (byte)(val >>>  8);
+				packed[off + 3] = (byte)(val >>>  0);
+				return packed;
+			} catch (UnsupportedEncodingException e) {
+				throw new AssertionError(e);
+			}
+		}
+		
+		
+		public String deserializeKey(byte[] packed) {
+			try {
+				return new String(packed, 0, packed.length - 4, "UTF-8");
+			} catch (UnsupportedEncodingException e) {
+				throw new AssertionError(e);
+			}
+		}
+		
+		
+		public Integer deserializeValue(byte[] packed) {
+			int n = packed.length;
+			return (packed[n - 1] & 0xFF) | (packed[n - 2] & 0xFF) << 8 | (packed[n - 3] & 0xFF) << 16 | packed[n - 4] << 24;
+		}
+	};
 }
