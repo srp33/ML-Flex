@@ -69,13 +69,6 @@ public class Experiment
             return;
         }
         
-        // Short circuit the current iteration of the experiment if it has already been completed
-        if (IsIterationComplete())
-        {
-            PrintIterationCompleteMessage();
-            return;
-        }
-        
         // Set and save random seed so that all nodes use the same random seed for each iteration.
         SetRandomSeed();
 
@@ -89,6 +82,13 @@ public class Experiment
         // Load data into memory before performing evaluation steps
         Singletons.InstanceVault.PrepareDataInstances();
         
+        // Short circuit the current iteration of the experiment if it has already been completed
+        if (IsIterationComplete())
+        {
+            PrintIterationCompleteMessage();
+            return;
+        }
+               
         if (Singletons.Config.GetBooleanValue("PERMUTE_DEPENDENT_VARIABLE_VALUES", "false")) 
         { 
             Singletons.Log.Debug("Permuting class labels");

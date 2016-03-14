@@ -37,6 +37,7 @@ import java.util.HashMap;
 public class Log
 {
     private String _machineAddress;
+    private int _maxExceptionsPerIteration;
 
     /** Indicates how many exceptions have been caught so far as the experiment has been executing. */
     public int NumExceptionsCaught;
@@ -48,8 +49,9 @@ public class Log
      *
      * @throws Exception
      */
-    public Log() throws Exception
+    public Log(int maxExceptionsPerIteration) throws Exception
     {
+    	_maxExceptionsPerIteration = maxExceptionsPerIteration;
         NumExceptionsCaught = 0;
         _machineAddress = MiscUtilities.GetMachineAddress();
     }
@@ -177,7 +179,7 @@ public class Log
 
         NumExceptionsCaught++;
 
-        if (NumExceptionsCaught >= 25)
+        if (NumExceptionsCaught >= _maxExceptionsPerIteration)
         {
             Info("More than " + NumExceptionsCaught + " non-fatal exceptions have occurred, so aborting!");
             System.exit(0);

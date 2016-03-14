@@ -35,7 +35,7 @@ import java.util.*;
 public class Config
 {
     private String _filePath;
-    private HashMap<String, String> _configValues = new HashMap<String, String>();
+    private HashMap<String, String> _configValues;
 
     /** Constructor
      *
@@ -44,16 +44,17 @@ public class Config
     public Config(String filePath) throws Exception
     {
         _filePath = filePath;
-        ParseFromFile();
+        _configValues = ParseFromFile(_filePath);
     }
 
     /** Retrieves all configuration values from the file and stores them in memory.
      *
      * @throws Exception
      */
-    private void ParseFromFile() throws Exception
+    public static HashMap<String, String> ParseFromFile(String filePath) throws Exception
     {
-        String fileText = FileUtilities.ReadTextFile(_filePath);
+    	HashMap<String, String> configValues = new HashMap<String, String>();
+        String fileText = FileUtilities.ReadTextFile(filePath);
 
         for (String line : fileText.split("\n"))
         {
@@ -68,9 +69,11 @@ public class Config
                 if (rowValue.equals(""))
                     Singletons.Log.Debug("An empty value was specified for " + rowKey);
 
-                _configValues.put(rowKey,  rowValue);
+                configValues.put(rowKey,  rowValue);
             }
         }
+        
+        return configValues;
     }
 
     /** Indicates whether a configuration value exists for the specified key.

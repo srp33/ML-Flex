@@ -63,7 +63,8 @@ public class Main
     {
         try
         {
-            Singletons.Log = new Log();
+        	int maxExceptionsPerIteration = Integer.parseInt(GetArgValue(args, "MAX_EXCEPTIONS_PER_ITERATION", "25"));
+            Singletons.Log = new Log(maxExceptionsPerIteration);
         }
         catch (Exception ex)
         {

@@ -299,6 +299,8 @@ public class InstanceVault
         if (reset)
         {
             Singletons.Log.Debug("Getting cross-validation assignments");
+            
+            new CrossValidationAssignments(Singletons.Config.GetNumOuterCrossValidationFolds(), DependentVariableInstances, false);
             _cvAssignments = new CrossValidationAssignments(Singletons.Config.GetNumOuterCrossValidationFolds(), DependentVariableInstances, false).AssignFolds();
         }
 
