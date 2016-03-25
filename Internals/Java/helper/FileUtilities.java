@@ -598,6 +598,9 @@ public class FileUtilities
      */
     public static String CreateDirectoryIfNotExists(String dirPath) throws Exception
     {
+    	if (dirPath.equals("."))
+    		return dirPath;
+    	
         File dir = new File(dirPath);
         if (!dir.exists())
         {

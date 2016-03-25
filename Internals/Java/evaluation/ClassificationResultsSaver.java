@@ -122,15 +122,10 @@ public class ClassificationResultsSaver
 
         // Basic definitions for many of the evaluation metrics can be found here: http://weka.sourceforge.net/doc/weka/classifiers/Evaluation.html
 
-        Singletons.Log.Debug("Save performance metrics - step 1");
         nameValueResults.add(NameValuePair.Create("Weighted average AUC", results.GetWekaEvaluation().weightedAreaUnderROC()));
-        Singletons.Log.Debug("Save performance metrics - step 1.2");
         nameValueResults.add(NameValuePair.Create("Weighted average F-Measure", results.GetWekaEvaluation().weightedFMeasure()));
-        Singletons.Log.Debug("Save performance metrics - step 1.3");
         nameValueResults.add(NameValuePair.Create("Weighted average true positive rate", results.GetWekaEvaluation().weightedTruePositiveRate()));
-        Singletons.Log.Debug("Save performance metrics - step 1.4");
         nameValueResults.add(NameValuePair.Create("Weighted average false positive rate", results.GetWekaEvaluation().weightedFalsePositiveRate()));
-        Singletons.Log.Debug("Save performance metrics - step 1.5");
         nameValueResults.add(NameValuePair.Create("Weighted average sensitivity (recall)", results.GetWekaEvaluation().weightedRecall()));
 
         // Not sure what the following should mean because you don't know which class is 'positive' and which is negative' and because you may have more than two classes. These aren't displayed in Weka output, possible for same reason.
@@ -139,7 +134,6 @@ public class ClassificationResultsSaver
         // This one is displayed in Weka, but I'm not sure what they mean by it
         //nameValueResults.add(NameValuePair.Create("Weighted Specificity / Precision", results.GetWekaEvaluation().weightedPrecision()));
 
-        Singletons.Log.Debug("Save performance metrics - step 2");
         nameValueResults.add(NameValuePair.Create("Total number correct", results.GetTotalNumberCorrect()));
         nameValueResults.add(NameValuePair.Create("Total number incorrect", results.GetTotalNumberIncorrect()));
         nameValueResults.add(NameValuePair.Create("Accuracy", results.GetAccuracy()));
@@ -155,13 +149,11 @@ public class ClassificationResultsSaver
         nameValueResults.add(NameValuePair.Create("Root relative squared error (%)", results.GetWekaEvaluation().rootRelativeSquaredError()));
 
         // These copy what is output in Weka. I need to find a reference to what they actually mean
-        Singletons.Log.Debug("Save performance metrics - step 3");
         nameValueResults.add(NameValuePair.Create("Kononenko & Bratko information score (bits)", results.GetWekaEvaluation().KBInformation()));
         nameValueResults.add(NameValuePair.Create("Kononenko & Bratko information score (bits / instance)", results.GetWekaEvaluation().KBMeanInformation()));
         nameValueResults.add(NameValuePair.Create("Kononenko & Bratko relative information score (%)", results.GetWekaEvaluation().KBRelativeInformation()));
 
         // These copy what is output in Weka. I need to find a reference to what they actually mean
-        Singletons.Log.Debug("Save performance metrics - step 4");
         nameValueResults.add(NameValuePair.Create("Class complexity - order (bits)", results.GetWekaEvaluation().SFPriorEntropy()));
         nameValueResults.add(NameValuePair.Create("Class complexity - order (bits / instance)", results.GetWekaEvaluation().SFMeanPriorEntropy()));
         nameValueResults.add(NameValuePair.Create("Class complexity - scheme (bits)", results.GetWekaEvaluation().SFSchemeEntropy()));
@@ -172,7 +164,6 @@ public class ClassificationResultsSaver
         nameValueResults.add(0, new NameValuePair("Metric", "Result"));
 
         // Save the metrics to a file
-        Singletons.Log.Debug("Save performance metrics - step 5");
         ResultsFileUtilities.AppendMatrixColumn(nameValueResults, outFilePath, headerComment);
     }
 
@@ -364,18 +355,18 @@ public class ClassificationResultsSaver
     public void SaveMultiIterationClassificationResults(boolean isForTrainingData) throws Exception
     {
         // Get the column names that will be used (one for each iteration)
-        ArrayList<String> columnNames = ListUtilities.CreateStringList(ListUtilities.CreateIntegerSequenceList(1, Singletons.Config.GetNumIterations()));
-        columnNames = ListUtilities.Prefix(columnNames, "Iteration ");
+        ArrayList<String> iterations = ListUtilities.CreateStringList(ListUtilities.CreateIntegerSequenceList(1, Singletons.Config.GetNumIterations()));
+        iterations = ListUtilities.Prefix(iterations, "Iteration ");
 
         // Combine results for performance metrics
-        ResultsFileUtilities.CombineMatrixFiles(PERFORMANCE_METRICS_COMMENT + MULTI_ITERATION_COMMENT, ResultsFileUtilities.GetAllIterationFilePaths(_modelSelector.GetResultsFilePaths(true, isForTrainingData).PERFORMANCE_METRICS), _modelSelector.GetResultsFilePaths(false, isForTrainingData).PERFORMANCE_METRICS, false, ListUtilities.InsertIntoStringList(columnNames, "Metric", 0));
+        ResultsFileUtilities.CombineMatrixFiles(PERFORMANCE_METRICS_COMMENT + MULTI_ITERATION_COMMENT, ResultsFileUtilities.GetAllIterationFilePaths(_modelSelector.GetResultsFilePaths(true, isForTrainingData).PERFORMANCE_METRICS), _modelSelector.GetResultsFilePaths(false, isForTrainingData).PERFORMANCE_METRICS, false, ListUtilities.InsertIntoStringList(iterations, "Metric", 0));
 
         // Combine results for per-class metrics
-        ResultsFileUtilities.CombineMatrixFiles(PER_CLASS_METRICS_COMMENT + MULTI_ITERATION_COMMENT, ResultsFileUtilities.GetAllIterationFilePaths(_modelSelector.GetResultsFilePaths(true, isForTrainingData).PER_CLASS_METRICS), _modelSelector.GetResultsFilePaths(false, isForTrainingData).PER_CLASS_METRICS, false, ListUtilities.InsertIntoStringList(columnNames, "Metric", 0));
+        ResultsFileUtilities.CombineMatrixFiles(PER_CLASS_METRICS_COMMENT + MULTI_ITERATION_COMMENT, ResultsFileUtilities.GetAllIterationFilePaths(_modelSelector.GetResultsFilePaths(true, isForTrainingData).PER_CLASS_METRICS), _modelSelector.GetResultsFilePaths(false, isForTrainingData).PER_CLASS_METRICS, false, ListUtilities.InsertIntoStringList(iterations, "Metric", 0));
 
         // Combine results for number of features vs. AUC
         if (FeatureSelectionEvaluator.NeedToSelectFeatures(_modelSelector.Processor, _modelSelector.FeatureSelectionAlgorithm) && Singletons.Config.GetNumFeaturesOptions(_modelSelector.Processor, _modelSelector.FeatureSelectionAlgorithm).size() > 1)
-            ResultsFileUtilities.CombineMatrixFiles(NUM_FEATURES_COMMENT + MULTI_ITERATION_COMMENT, ResultsFileUtilities.GetAllIterationFilePaths(_modelSelector.GetResultsFilePaths(true, isForTrainingData).NUM_FEATURES), _modelSelector.GetResultsFilePaths(false, isForTrainingData).NUM_FEATURES, false, ListUtilities.InsertIntoStringList(columnNames, "Number of Features", 0));
+            ResultsFileUtilities.CombineMatrixFiles(NUM_FEATURES_COMMENT + MULTI_ITERATION_COMMENT, ResultsFileUtilities.GetAllIterationFilePaths(_modelSelector.GetResultsFilePaths(true, isForTrainingData).NUM_FEATURES), _modelSelector.GetResultsFilePaths(false, isForTrainingData).NUM_FEATURES, false, ListUtilities.InsertIntoStringList(iterations, "Number of Features", 0));
     }
 
     /** This method saves results for ensemble learning.

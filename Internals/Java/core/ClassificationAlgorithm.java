@@ -93,10 +93,10 @@ public class ClassificationAlgorithm
 
             String errorMessage = "An exception occurred while training and Action. ";
             errorMessage += "Algorithm: " + Key + ". ";
-            errorMessage += "Training data (first five instances):\n" + trainData.toShortString() + "\n";
-            errorMessage += "Test data (first five instances):\n" + testData.toShortString() + "\n";
+            errorMessage += "Training data (partial):\n" + trainData.toShortString() + "\n";
+            errorMessage += "Test data (partial):\n" + testData.toShortString() + "\n";
 
-            errorMessage += "Dependent variable data (first five instances):\n";
+            errorMessage += "Dependent variable data (partial):\n";
             
             for (int i=0; i<5; i++)
             	errorMessage += dependentVariableInstances.get(new ArrayList<String>(dependentVariableInstances.keySet()).get(i)) + "\n";

@@ -45,14 +45,18 @@ public class DataInstanceCollection implements Iterable<String>
     private static String COMMA_REPLACE_STRING = "_comma_";
     
     private HashMap<String, CompactHashMap<Integer, String>> _instances;
+    //private HashMap<String, HashMap<Integer, String>> _instances;
     private CompactHashMap<String, Integer> _valueIndexMap;
+    //private HashMap<String, Integer> _valueIndexMap;
     private int _intRefCount;
 
     /** Default constructor */
     public DataInstanceCollection()
     {
         _instances = new HashMap<String, CompactHashMap<Integer, String>>();
+        //_instances = new HashMap<String, HashMap<Integer, String>>();
         _valueIndexMap  = new CompactHashMap<String, Integer>(COMPACT_TRANSLATOR_STR_INT);
+        //_valueIndexMap  = new HashMap<String, Integer>();
         _intRefCount = Integer.MIN_VALUE;
     }
 
@@ -72,7 +76,8 @@ public class DataInstanceCollection implements Iterable<String>
     	Integer intDataPointName = GetIntRef(dataPointName);
 
     	if (!_instances.containsKey(instanceID))
-    		_instances.put(instanceID.intern(), new CompactHashMap<Integer, String>(COMPACT_TRANSLATOR_INT_STR));
+    		_instances.put(instanceID, new CompactHashMap<Integer, String>(COMPACT_TRANSLATOR_INT_STR));
+			//_instances.put(instanceID, new HashMap<Integer, String>());
 
     	_instances.get(instanceID).put(intDataPointName, value);
     }
@@ -125,7 +130,7 @@ public class DataInstanceCollection implements Iterable<String>
        result._valueIndexMap = _valueIndexMap;
        
        for (String instanceID : instanceIDs)
-			result._instances.put(instanceID.intern(), _instances.get(instanceID));
+			result._instances.put(instanceID, _instances.get(instanceID));
 
        return result;
    }
@@ -148,6 +153,7 @@ public class DataInstanceCollection implements Iterable<String>
    private String GetDataPointValue(String instanceID, Integer intDataPointName)
    {
 	   CompactHashMap<Integer, String> instance = _instances.get(instanceID);
+	   //HashMap<Integer, String> instance = _instances.get(instanceID);
 	   
 	   if (instance == null)
 		   return Settings.MISSING_VALUE_STRING;
@@ -175,7 +181,7 @@ public class DataInstanceCollection implements Iterable<String>
 	    HashMap<String, String> values = new HashMap<String, String>();
 	
 	    for (String instanceID : _instances.keySet())
-	        values.put(instanceID.intern(), GetDataPointValue(instanceID, dataPointName));
+	        values.put(instanceID, GetDataPointValue(instanceID, dataPointName));
 	
 	    return values;
 	}
@@ -190,7 +196,7 @@ public class DataInstanceCollection implements Iterable<String>
        ArrayList<String> values = new ArrayList<String>();
 
        for (String dataPointName : dataPointNames)
-           values.add(GetDataPointValue(instanceID, dataPointName).intern());
+       	   values.add(GetDataPointValue(instanceID, dataPointName));
 
        return values;
     }
@@ -213,7 +219,7 @@ public class DataInstanceCollection implements Iterable<String>
     		intKey = new Integer(_intRefCount);
     		_intRefCount++;
 
-    		_valueIndexMap.put(key.intern(), intKey);
+    		_valueIndexMap.put(key, intKey);
     	}
     	
     	return intKey;
@@ -263,7 +269,7 @@ public class DataInstanceCollection implements Iterable<String>
             String value = GetDataPointValue(instanceID, dataPointName);
 
             if (!MiscUtilities.IsMissing(value))
-            	values.add(value.intern());
+            	values.add(value);
         }
 
         return new ArrayList<String>(values);
@@ -368,7 +374,7 @@ public class DataInstanceCollection implements Iterable<String>
 
        ArrayList<String> instanceIDs = GetIDs();
        
-       for (int i = 0; i<3; i++)
+       for (int i = 0; i<5; i++)
        {
        		String instanceID = instanceIDs.get(i);
        		builder.append(instanceToString(instanceID) + "\n");
@@ -381,9 +387,12 @@ public class DataInstanceCollection implements Iterable<String>
     {
         StringBuilder output = new StringBuilder();
         output.append(instanceID + ":");
+        
+        ArrayList<String> dataPointNames = GetDataPointNames();
 
-        for (String dataPointName : GetDataPointNames())
+        for (int i=0; i<5; i++)
         {
+        	String dataPointName = dataPointNames.get(i);
             String dataPointValue = GetDataPointValue(instanceID, dataPointName);
             
 			output.append(dataPointName + "=" + dataPointValue.replace(",", COMMA_REPLACE_STRING) + ",");
